@@ -9,6 +9,9 @@ public class Skill {
         this.name = name;
     }
 
+    public Skill() {
+    }
+
     public void setId(long id) {
         this.id = id;
     }
@@ -23,5 +26,13 @@ public class Skill {
 
     public String getName() {
         return name;
+    }
+
+    @Override
+    public String toString() {
+        return "Skill{" +
+               "id=" + id +
+               ", name='" + name + '\'' +
+               '}';
     }
 }

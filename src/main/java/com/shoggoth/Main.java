@@ -1,25 +1,28 @@
 package com.shoggoth;
 
+import com.shoggoth.pojo.Developer;
+import com.shoggoth.pojo.Skill;
+import com.shoggoth.pojo.Specialty;
+import com.shoggoth.repository.JdbcDeveloperRepositoryImpl;
+
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main {
-    static final String GET_DEVELOPERS_SQL = """
-            SELECT * FROM developer;
-            """;
+    public static void main(String[] args) {
+        Connection connection = ConnectionUtil.getConnection();
+        var jdbcDeveloperRepository = new JdbcDeveloperRepositoryImpl(connection);
+        List<Skill> skills = new ArrayList<>();
+        skills.add(new Skill(1, "Java EE"));
+        skills.add(new Skill(2, "Spring"));
 
-    public static void main(String[] args) throws SQLException {
-        Connection connection = ConnectionFactory.getConnection();
-        Statement statement = connection.createStatement();
-        ResultSet resultSet = statement.executeQuery(GET_DEVELOPERS_SQL);
-        while (resultSet.next()) {
-            System.out.printf("%d   %s  %s  %d  %d\n",
-                    resultSet.getLong("id"),
-                    resultSet.getString("first_name"),
-                    resultSet.getString("last_name"),
-                    resultSet.getInt("specialty_id"),
-                    resultSet.getInt("status_id"));
-
-        }
+        Developer developer = new Developer(1,
+                "Ivan",
+                "Ivanov",
+                skills,
+                new Specialty(1, "backend"));
+        jdbcDeveloperRepository.add(developer);
 
     }
 }

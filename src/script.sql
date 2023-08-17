@@ -22,7 +22,7 @@ CREATE TABLE developer (
                            developer_status ENUM ('ACTIVE', 'DELETED')
 );
 
-CREATE TABLE developers_skill (
+CREATE TABLE developer_skill (
                                   developer_id BIGINT,
                                   skill_id BIGINT,
                                   developer_skill_status ENUM ('ACTIVE', 'DELETED')
@@ -30,6 +30,6 @@ CREATE TABLE developers_skill (
 
 ALTER TABLE developer ADD FOREIGN KEY (specialty_id) REFERENCES specialty (id);
 
-ALTER TABLE developers_skill ADD FOREIGN KEY (developer_id) REFERENCES developer (id);
+ALTER TABLE developer_skill ADD FOREIGN KEY (developer_id) REFERENCES developer (id);
 
-ALTER TABLE developers_skill ADD FOREIGN KEY (skill_id) REFERENCES skill (id);
+ALTER TABLE developer_skill ADD FOREIGN KEY (skill_id) REFERENCES skill (id);

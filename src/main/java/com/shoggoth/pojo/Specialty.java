@@ -4,9 +4,12 @@ public class Specialty {
     private long id;
     private String name;
 
-    public Specialty(long id, String name) {
+     public Specialty(long id, String name) {
         this.id = id;
         this.name = name;
+    }
+
+    public Specialty() {
     }
 
     public long getId() {
@@ -23,5 +26,13 @@ public class Specialty {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return "Specialty{" +
+               "id=" + id +
+               ", name='" + name + '\'' +
+               '}';
     }
 }
