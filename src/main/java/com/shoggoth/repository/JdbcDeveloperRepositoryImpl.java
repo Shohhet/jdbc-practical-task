@@ -23,7 +23,8 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
             """;
     private static final String ADD_DEVELOPER_SKILL_SQL = """
             INSERT INTO developer_skill (developer_id, skill_id)
-            VALUES (?, ?, 'ACTIVE');
+            VALUES (?, ?, 'ACTIVE')
+            ON DUPLICATE KEY UPDATE developer_skill_status = 'ACTIVE';
             """;
 
     public static final String DELETE_DEVELOPER_SQL = """
