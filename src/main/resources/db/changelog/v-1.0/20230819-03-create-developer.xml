@@ -13,13 +13,13 @@
             <column  name="first_name"  type="varchar(128)">
                 <constraints  nullable="false"/>
             </column>
-            <column  name="second_name"  type="varchar(128)">
+            <column  name="last_name"  type="varchar(128)">
                 <constraints  nullable="false"/>
             </column>
             <column name="specialty_id" type="bigint">
                 <constraints foreignKeyName="fk_developer_specialty" references="specialty(id)"/>
             </column>
-            <column  name="state"  type="varchar(8)">
+            <column  name="status"  type="varchar(8)">
                 <constraints nullable="false"/>
             </column>
         </createTable>

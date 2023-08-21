@@ -1,13 +1,12 @@
-package com.shoggoth.repository;
+package com.shoggoth.repository.impl;
 
 import com.shoggoth.exceptions.RepositoryException;
-import com.shoggoth.pojo.Developer;
-import com.shoggoth.pojo.Skill;
-import com.shoggoth.pojo.Specialty;
-import com.shoggoth.repository.interfaces.DeveloperRepository;
+import com.shoggoth.entity.Developer;
+import com.shoggoth.entity.Skill;
+import com.shoggoth.repository.DeveloperRepository;
 
 import java.sql.*;
-import java.util.Collection;
+import java.util.Optional;
 
 public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
     Connection connection;
@@ -17,20 +16,19 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
     }
 
     private static final String ADD_DEVELOPER_SQL = """
-            INSERT INTO developer (id, first_name, last_name, specialty_id, developer_status)
+            INSERT INTO developer (id, first_name, last_name, specialty_id, status)
             VALUES (?, ?, ?, ?, 'ACTIVE')
-            ON DUPLICATE KEY UPDATE developer_status = 'ACTIVE';
+            ON DUPLICATE KEY UPDATE status = 'ACTIVE';
             """;
     private static final String ADD_DEVELOPER_SKILL_SQL = """
             INSERT INTO developer_skill (developer_id, skill_id)
-            VALUES (?, ?, 'ACTIVE')
-            ON DUPLICATE KEY UPDATE developer_skill_status = 'ACTIVE';
+            VALUES (?, ?);
             """;
 
     public static final String DELETE_DEVELOPER_SQL = """
             UPDATE developer
-            SET developer_status = 'DELETED'
-            WHERE id = ?;
+            SET status = 'DELETED'
+            WHERE id = ? AND status LIKE 'ACTIVE';
 
             """;
     private static final String DELETE_DEVELOPER_SKILL_SQL = """
@@ -39,17 +37,18 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
             """;
 
     private static final String GET_DEVELOPER_SQL = """
-            SELECT developer.id, first_name, last_name, specialty_name
+            SELECT developer.id, first_name, last_name, specialty.name
             FROM developer JOIN specialty ON developer.specialty_id = specialty.id
             WHERE developer.id = ?;
             """;
     private static final String GET_DEVELOPER_SKILL_SQL = """
-            SELECT skill_name
-            FROM developer_skill JOIN skill ON developer_skill.skill_id = skill.id;
+            SELECT name
+            FROM developer_skill JOIN skill ON developer_skill.skill_id = skill.id
+            WHERE developer_skill.developer_id = ?;
             """;
 
     @Override
-    public Developer add(Developer developer) {
+    public Optional<Developer> add(Developer developer) {
         try {
             var jdbcSpecialtyRepository = new JdbcSpecialtyRepositoryImpl(connection);
             developer.setSpecialty(jdbcSpecialtyRepository.add(developer.getSpecialty()));
@@ -58,6 +57,7 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
             preparedStatement.setLong(1, developer.getId());
             preparedStatement.setString(2, developer.getFirstName());
             preparedStatement.setString(3, developer.getLastName());
+
             preparedStatement.setLong(4, developer.getSpecialty().getId());
             preparedStatement.executeUpdate();
             var generatedKeys = preparedStatement.getGeneratedKeys();
@@ -85,15 +85,16 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
         try {
             var preparedStatement = connection.prepareStatement(DELETE_DEVELOPER_SQL);
             preparedStatement.setLong(1, id);
-            preparedStatement = connection.prepareStatement(DELETE_DEVELOPER_SKILL_SQL);
-            preparedStatement.setLong(1, id);
-            preparedStatement.executeUpdate();
+            if (preparedStatement.executeUpdate() > 0) {
+                preparedStatement = connection.prepareStatement(DELETE_DEVELOPER_SKILL_SQL);
+                preparedStatement.setLong(1, id);
+            }
+            return preparedStatement.executeUpdate() > 0;
 
 
         } catch (SQLException e) {
             throw new RepositoryException(e);
         }
-        return false;
     }
 
     @Override
@@ -102,7 +103,7 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
     }
 
     @Override
-    public Developer getById(Long id) {
+    public Optional<Developer> getById(Long id) {
         try {
             var preparedStatement = connection.prepareStatement(GET_DEVELOPER_SQL);
             preparedStatement.setLong(1, id);
@@ -111,11 +112,6 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
         } catch (SQLException e) {
             throw new RepositoryException(e);
         }
-        return null;
-    }
-
-    @Override
-    public Collection<Developer> getAll() {
         return null;
     }
 }

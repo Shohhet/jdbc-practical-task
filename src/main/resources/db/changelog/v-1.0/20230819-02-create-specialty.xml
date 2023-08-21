@@ -13,7 +13,7 @@
             <column  name="name"  type="varchar(128)">
                 <constraints  nullable="false"/>
             </column>
-            <column  name="state"  type="varchar(8)">
+            <column  name="status"  type="varchar(8)">
                 <constraints nullable="false"/>
             </column>
         </createTable>
