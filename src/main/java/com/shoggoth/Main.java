@@ -1,23 +1,28 @@
 package com.shoggoth;
 
-import com.shoggoth.entity.Developer;
-import com.shoggoth.entity.Skill;
-import com.shoggoth.entity.Specialty;
-import com.shoggoth.repository.impl.JdbcDeveloperRepositoryImpl;
-import com.shoggoth.repository.impl.JdbcSkillRepositoryImpl;
-import com.shoggoth.repository.impl.JdbcSpecialtyRepositoryImpl;
+import com.shoggoth.model.ConnectionUtil;
+import com.shoggoth.model.entity.Developer;
+import com.shoggoth.model.entity.Skill;
+import com.shoggoth.model.entity.Specialty;
+import com.shoggoth.model.entity.Status;
+import com.shoggoth.model.exceptions.RepositoryException;
+import com.shoggoth.model.repository.impl.JdbcDeveloperRepositoryImpl;
+import com.shoggoth.model.repository.impl.JdbcSkillRepositoryImpl;
+import com.shoggoth.model.repository.impl.JdbcSpecialtyRepositoryImpl;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException, RepositoryException {
         Connection connection = ConnectionUtil.getConnection();
         var jdbcDeveloperRepository = new JdbcDeveloperRepositoryImpl(connection);
         var jdbcSpecialtyRepository = new JdbcSpecialtyRepositoryImpl(connection);
         var jdbcSkillRepository = new JdbcSkillRepositoryImpl(connection);
-        List<Skill> backendSkills = new ArrayList<>();
+       /* List<Skill> backendSkills = new ArrayList<>();
         List<Skill> frontendSkills = new ArrayList<>();
         List<Skill> fullstackSkills = new ArrayList<>();
 
@@ -35,14 +40,15 @@ public class Main {
         frontendSkills.add(docker);
         fullstackSkills.addAll(backendSkills);
         fullstackSkills.addAll(frontendSkills);
-
-/*        jdbcSpecialtyRepository.add(new Specialty(0, "backend"));
-        jdbcSpecialtyRepository.add(new Specialty(0, "frontend"));
-        jdbcSpecialtyRepository.add(new Specialty(0, "fullstack"));*/
+*/
+        Optional<Specialty> specialty =  jdbcSpecialtyRepository.add(new Specialty(0, "frontend", Status.ACTIVE));
+        specialty.ifPresentOrElse(System.out::println, () -> System.out.println("empty"));
+   /*     jdbcSpecialtyRepository.add(new Specialty(0, "frontend", Status.ACTIVE));
+        jdbcSpecialtyRepository.add(new Specialty(0, "fullstack", Status.ACTIVE));*/
 
         System.out.println();
 
-        Developer backendDeveloper = new Developer(0,
+      /*  Developer backendDeveloper = new Developer(0,
                 "Ivan",
                 "Ivanov",
                 backendSkills,
@@ -63,7 +69,7 @@ public class Main {
 
         jdbcDeveloperRepository.add(backendDeveloper);
         jdbcDeveloperRepository.add(frontendDeveloper);
-        jdbcDeveloperRepository.add(fullstackDeveloper);
+        jdbcDeveloperRepository.add(fullstackDeveloper);*/
 
 
 

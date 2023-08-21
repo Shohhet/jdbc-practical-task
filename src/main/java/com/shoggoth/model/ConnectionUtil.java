@@ -1,7 +1,8 @@
-package com.shoggoth;
+package com.shoggoth.model;
 
 import com.mysql.cj.jdbc.MysqlDataSource;
 
+import javax.sql.DataSource;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Connection;
@@ -10,23 +11,28 @@ import java.util.Objects;
 import java.util.Properties;
 
 public class ConnectionUtil {
-    public static Connection getConnection() {
+    private ConnectionUtil() {
+    }
+
+    private static DataSource getDataSource() {
         String path = Objects.requireNonNull(Thread.currentThread().getContextClassLoader().getResource("")).getPath();
         Properties properties = new Properties();
         MysqlDataSource mysqlDataSource;
-        Connection connection;
-
-        try (FileInputStream fileInputStream = new FileInputStream(path + "db.properties")){
+        try (FileInputStream fileInputStream = new FileInputStream(path + "db.properties")) {
             properties.load(fileInputStream);
             mysqlDataSource = new MysqlDataSource();
             mysqlDataSource.setURL(properties.getProperty("MYSQL_DB_URL"));
             mysqlDataSource.setUser(properties.getProperty("MYSQL_DB_USERNAME"));
             mysqlDataSource.setPassword(properties.getProperty("MYSQL_DB_PASSWORD"));
-            connection = mysqlDataSource.getConnection();
-        } catch (IOException | SQLException e) {
-            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e); //TODO Add logger
         }
-        return connection;
+        return mysqlDataSource;
+    }
+
+    public static Connection getConnection() throws SQLException {
+        return getDataSource().getConnection();
+
     }
 
 }

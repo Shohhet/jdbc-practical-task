@@ -1,4 +1,4 @@
-package com.shoggoth.entity;
+package com.shoggoth.model.entity;
 
 import java.util.Objects;
 
@@ -32,5 +32,22 @@ public class Specialty extends Entity {
     @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), name);
+    }
+
+
+    @Override
+    public String toString() {
+        return new StringBuilder()
+                .append("Specialty{")
+                .append(" id = ")
+                .append(getId())
+                .append(";")
+                .append(" name = ")
+                .append(name)
+                .append(";")
+                .append(" status = ")
+                .append(getStatus())
+                .append("}")
+                .toString();
     }
 }

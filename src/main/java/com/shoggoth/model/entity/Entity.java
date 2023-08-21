@@ -1,4 +1,4 @@
-package com.shoggoth.entity;
+package com.shoggoth.model.entity;
 
 import java.util.Objects;
 
@@ -41,4 +41,5 @@ public abstract class Entity {
     public int hashCode() {
         return Objects.hash(id, status);
     }
+
 }

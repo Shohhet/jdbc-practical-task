@@ -1,4 +1,4 @@
-package com.shoggoth.exceptions;
+package com.shoggoth.model.exceptions;
 
 public class RepositoryException extends Exception {
     public RepositoryException() {

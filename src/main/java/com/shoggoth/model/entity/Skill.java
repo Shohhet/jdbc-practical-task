@@ -1,4 +1,4 @@
-package com.shoggoth.entity;
+package com.shoggoth.model.entity;
 
 import java.util.Objects;
 
