@@ -32,4 +32,20 @@ public class Skill extends Entity{
     public int hashCode() {
         return Objects.hash(super.hashCode(), name);
     }
+
+    @Override
+    public String toString() {
+        return new StringBuilder()
+                .append("Skill{")
+                .append(" id = ")
+                .append(getId())
+                .append(";")
+                .append(" name = ")
+                .append(name)
+                .append(";")
+                .append(" status = ")
+                .append(getStatus())
+                .append("}")
+                .toString();
+    }
 }

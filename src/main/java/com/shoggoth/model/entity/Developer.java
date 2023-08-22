@@ -6,8 +6,8 @@ import java.util.Objects;
 public class Developer extends Entity{
     private String firstName;
     private String lastName;
-    List<Skill> skills;
-    Specialty specialty;
+    private List<Skill> skills;
+    private Specialty specialty;
 
     public Developer() {}
 
@@ -65,5 +65,20 @@ public class Developer extends Entity{
     @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), firstName, lastName, skills, specialty);
+    }
+
+    @Override
+    public String toString() {
+        return new StringBuilder()
+                .append("Developer{")
+                .append("\n")
+                .append("id = ").append(this.getId()).append("\n")
+                .append("firstName=").append(firstName).append("\n")
+                .append("lastName=").append(lastName).append("\n")
+                .append("skills=").append(skills).append("\n")
+                .append("specialty=").append(specialty).append("\n")
+                .append("status=").append(this.getStatus())
+                .append("}")
+                .toString();
     }
 }

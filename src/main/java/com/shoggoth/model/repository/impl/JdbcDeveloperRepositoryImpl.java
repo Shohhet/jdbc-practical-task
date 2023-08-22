@@ -1,5 +1,6 @@
 package com.shoggoth.model.repository.impl;
 
+import com.shoggoth.model.entity.Status;
 import com.shoggoth.model.exceptions.RepositoryException;
 import com.shoggoth.model.entity.Developer;
 import com.shoggoth.model.entity.Skill;
@@ -16,9 +17,9 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
     }
 
     private static final String ADD_DEVELOPER_SQL = """
-            INSERT INTO developer (id, first_name, last_name, specialty_id, status)
-            VALUES (?, ?, ?, ?, 'ACTIVE')
-            ON DUPLICATE KEY UPDATE status = 'ACTIVE';
+            INSERT INTO developer (first_name, last_name, status)
+            VALUES (?, ?, ?)
+            ON DUPLICATE KEY UPDATE status = ?;
             """;
     private static final String ADD_DEVELOPER_SKILL_SQL = """
             INSERT INTO developer_skill (developer_id, skill_id)
@@ -50,7 +51,24 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
 
     @Override
     public Optional<Developer> add(Developer developer) throws RepositoryException {
-        return Optional.empty();
+        Optional<Developer> maybeDeveloper = Optional.empty();
+        try(var prepStatement = connection.prepareStatement(ADD_DEVELOPER_SQL, Statement.RETURN_GENERATED_KEYS)) {
+            prepStatement.setString(1, developer.getFirstName());
+            prepStatement.setString(2, developer.getLastName());
+            prepStatement.setString(3, Status.ACTIVE.name());
+            prepStatement.setString(4, Status.ACTIVE.name());
+            prepStatement.executeUpdate();
+            try(var resultSet = prepStatement.getGeneratedKeys()){
+                if (resultSet.next()) {
+                    developer.setId(resultSet.getLong(1));
+                    developer.setStatus(Status.ACTIVE);
+                    maybeDeveloper = Optional.of(developer);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);//TODO Add logger
+        }
+        return maybeDeveloper;
     }
 
     @Override
