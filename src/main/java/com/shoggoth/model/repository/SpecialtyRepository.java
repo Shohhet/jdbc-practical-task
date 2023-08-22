@@ -3,6 +3,7 @@ package com.shoggoth.model.repository;
 import com.shoggoth.model.entity.Specialty;
 import com.shoggoth.model.exceptions.RepositoryException;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface SpecialtyRepository extends GenericRepository<Long, Specialty> {
@@ -17,4 +18,7 @@ public interface SpecialtyRepository extends GenericRepository<Long, Specialty> 
 
     @Override
     boolean delete(Long id) throws RepositoryException;
+
+    @Override
+    List<Specialty> getAll() throws RepositoryException;
 }

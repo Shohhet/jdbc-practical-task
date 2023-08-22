@@ -70,14 +70,14 @@ public class Developer extends Entity{
     @Override
     public String toString() {
         return new StringBuilder()
-                .append("Developer{")
+                .append("Developer {")
                 .append("\n")
                 .append("id = ").append(this.getId()).append("\n")
-                .append("firstName=").append(firstName).append("\n")
-                .append("lastName=").append(lastName).append("\n")
-                .append("skills=").append(skills).append("\n")
-                .append("specialty=").append(specialty).append("\n")
-                .append("status=").append(this.getStatus())
+                .append("firstName = ").append(firstName).append("\n")
+                .append("lastName = ").append(lastName).append("\n")
+                .append("skills = ").append(skills).append("\n")
+                .append("specialty = ").append(specialty).append("\n")
+                .append("status = ").append(this.getStatus()).append("\n")
                 .append("}")
                 .toString();
     }

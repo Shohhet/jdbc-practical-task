@@ -9,6 +9,8 @@ import com.shoggoth.model.repository.mapper.impl.DbRowToSpecialtyMapper;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class JdbcSpecialtyRepositoryImpl implements SpecialtyRepository {
@@ -34,6 +36,12 @@ public class JdbcSpecialtyRepositoryImpl implements SpecialtyRepository {
             UPDATE specialty
             SET name = ?
             WHERE id = ? AND status LIKE ?;
+            """;
+
+    private static final String GET_ALL_SPECIALTY_SQL = """
+            SELECT id, name, status
+            FROM specialty
+            WHERE status = ?;
             """;
 
     private final Connection connection;
@@ -71,7 +79,7 @@ public class JdbcSpecialtyRepositoryImpl implements SpecialtyRepository {
             prepStatement.setLong(1, id);
             prepStatement.setString(2, Status.ACTIVE.name());
             try (var resultSet = prepStatement.executeQuery()) {
-                while (resultSet.next()) {
+                if (resultSet.next()) {
                     maybeSpecialty = DbRowToSpecialtyMapper.getInstance().map(resultSet);
                 }
             }
@@ -113,5 +121,25 @@ public class JdbcSpecialtyRepositoryImpl implements SpecialtyRepository {
         } catch (SQLException e) {
             throw new RepositoryException(e);//TODO Add logger
         }
+    }
+
+    @Override
+    public List<Specialty> getAll() throws RepositoryException {
+        List<Specialty> specialtyList = new ArrayList<>();
+        try (var prepStatement = connection.prepareStatement(GET_ALL_SPECIALTY_SQL)) {
+            prepStatement.setString(1, Status.ACTIVE.name());
+            try (var resultSet = prepStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    DbRowToSpecialtyMapper
+                            .getInstance()
+                            .map(resultSet)
+                            .ifPresent(specialtyList::add);
+                }
+
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e); // TODO Add logger
+        }
+        return specialtyList;
     }
 }

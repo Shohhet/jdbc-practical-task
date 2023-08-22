@@ -7,6 +7,8 @@ import com.shoggoth.model.repository.SkillRepository;
 import com.shoggoth.model.repository.mapper.impl.DbRowToSkillMapper;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class JdbcSkillRepositoryImpl implements SkillRepository {
@@ -38,6 +40,11 @@ public class JdbcSkillRepositoryImpl implements SkillRepository {
             UPDATE skill
             SET name = ?
             WHERE id = ? AND status LIKE ?;
+            """;
+    private static final String GET_ALL_SKILL_SQL = """
+            SELECT id, name, status
+            FROM skill
+            WHERE status = ?;
             """;
     private final Connection connection;
 
@@ -74,7 +81,7 @@ public class JdbcSkillRepositoryImpl implements SkillRepository {
             prepStatement.setLong(1, id);
             prepStatement.setString(2, Status.ACTIVE.name());
             try (var resultSet = prepStatement.executeQuery()) {
-                while (resultSet.next()) {
+                if (resultSet.next()) {
                     maybeSkill = DbRowToSkillMapper.getInstance().map(resultSet);
                 }
             }
@@ -128,4 +135,25 @@ public class JdbcSkillRepositoryImpl implements SkillRepository {
             throw new RepositoryException(e);//TODO Add logger
         }
     }
+
+    @Override
+    public List<Skill> getAll() throws RepositoryException {
+        List<Skill> skillList = new ArrayList<>();
+        try (var prepStatement = connection.prepareStatement(GET_ALL_SKILL_SQL)) {
+            prepStatement.setString(1, Status.ACTIVE.name());
+            try (var resultSet = prepStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    DbRowToSkillMapper
+                            .getInstance()
+                            .map(resultSet)
+                            .ifPresent(skillList::add);
+                }
+
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e); // TODO Add logger
+        }
+        return skillList;
+    }
+
 }

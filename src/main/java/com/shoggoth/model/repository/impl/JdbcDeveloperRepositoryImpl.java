@@ -3,10 +3,12 @@ package com.shoggoth.model.repository.impl;
 import com.shoggoth.model.entity.Status;
 import com.shoggoth.model.exceptions.RepositoryException;
 import com.shoggoth.model.entity.Developer;
-import com.shoggoth.model.entity.Skill;
 import com.shoggoth.model.repository.DeveloperRepository;
+import com.shoggoth.model.repository.mapper.impl.DbRowToDeveloperMapper;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
@@ -16,10 +18,16 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
         this.connection = connection;
     }
 
+
     private static final String ADD_DEVELOPER_SQL = """
             INSERT INTO developer (first_name, last_name, status)
             VALUES (?, ?, ?)
             ON DUPLICATE KEY UPDATE status = ?;
+            """;
+    private static final String UPDATE_DEVELOPER_SQL = """
+            UPDATE developer
+            SET first_name = ?, last_name = ?
+            WHERE id = ? AND status = ?;
             """;
     private static final String ADD_DEVELOPER_SKILL_SQL = """
             INSERT INTO developer_skill (developer_id, skill_id)
@@ -28,9 +36,8 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
 
     public static final String DELETE_DEVELOPER_SQL = """
             UPDATE developer
-            SET status = 'DELETED'
-            WHERE id = ? AND status LIKE 'ACTIVE';
-
+            SET status = ?
+            WHERE id = ? AND status LIKE ?;
             """;
     private static final String DELETE_DEVELOPER_SKILL_SQL = """
             DELETE FROM developer_skill
@@ -38,9 +45,14 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
             """;
 
     private static final String GET_DEVELOPER_SQL = """
-            SELECT developer.id, first_name, last_name, specialty.name
-            FROM developer JOIN specialty ON developer.specialty_id = specialty.id
-            WHERE developer.id = ?;
+            SELECT id, first_name, last_name, status
+            FROM developer
+            WHERE id = ? AND status = ?;
+            """;
+    private static final String GET_ALL_DEVELOPER_SQL = """
+            SELECT id, first_name, last_name, status
+            FROM developer
+            WHERE status = ?;
             """;
     private static final String GET_DEVELOPER_SKILL_SQL = """
             SELECT name
@@ -48,17 +60,22 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
             WHERE developer_skill.developer_id = ?;
             """;
 
+    private static final String SET_NULL_SPECIALTY_FOR_DEVELOPERS = """
+            UPDATE developer
+            SET specialty_id = NULL
+            WHERE specialty_id = ?
+            """;
 
     @Override
     public Optional<Developer> add(Developer developer) throws RepositoryException {
         Optional<Developer> maybeDeveloper = Optional.empty();
-        try(var prepStatement = connection.prepareStatement(ADD_DEVELOPER_SQL, Statement.RETURN_GENERATED_KEYS)) {
+        try (var prepStatement = connection.prepareStatement(ADD_DEVELOPER_SQL, Statement.RETURN_GENERATED_KEYS)) {
             prepStatement.setString(1, developer.getFirstName());
             prepStatement.setString(2, developer.getLastName());
             prepStatement.setString(3, Status.ACTIVE.name());
             prepStatement.setString(4, Status.ACTIVE.name());
             prepStatement.executeUpdate();
-            try(var resultSet = prepStatement.getGeneratedKeys()){
+            try (var resultSet = prepStatement.getGeneratedKeys()) {
                 if (resultSet.next()) {
                     developer.setId(resultSet.getLong(1));
                     developer.setStatus(Status.ACTIVE);
@@ -73,16 +90,83 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
 
     @Override
     public Optional<Developer> getById(Long id) throws RepositoryException {
-        return Optional.empty();
+        Optional<Developer> maybeDeveloper = Optional.empty();
+        try (var prepStatement = connection.prepareStatement(GET_DEVELOPER_SQL)) {
+            prepStatement.setLong(1, id);
+            prepStatement.setString(2, Status.ACTIVE.name());
+            try (var resultSet = prepStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    maybeDeveloper = DbRowToDeveloperMapper.getInstance().map(resultSet);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e); // TODO Add logger
+        }
+        return maybeDeveloper;
     }
 
     @Override
     public Optional<Developer> update(Developer developer) throws RepositoryException {
-        return Optional.empty();
+        Optional<Developer> maybeDeveloper = Optional.empty();
+        try (var prepStatement = connection.prepareStatement(UPDATE_DEVELOPER_SQL)) {
+            prepStatement.setString(1, developer.getFirstName());
+            prepStatement.setString(2, developer.getLastName());
+            prepStatement.setLong(3, developer.getId());
+            prepStatement.setString(4, Status.ACTIVE.name());
+            int affectedRows = prepStatement.executeUpdate();
+            if (affectedRows == 1) {
+                developer.setStatus(Status.ACTIVE);
+                maybeDeveloper = Optional.of(developer);
+            }
+        } catch (
+                SQLException e) {
+            throw new RepositoryException(e); //TODO Add logger
+        }
+        return maybeDeveloper;
     }
 
     @Override
     public boolean delete(Long id) throws RepositoryException {
-        return false;
+        try (var prepStatement = connection.prepareStatement(DELETE_DEVELOPER_SQL)) {
+            prepStatement.setString(1, Status.DELETED.name());
+            prepStatement.setLong(2, id);
+            prepStatement.setString(3, Status.ACTIVE.name());
+            int affectedRows = prepStatement.executeUpdate();
+            return affectedRows == 1;
+        } catch (SQLException e) {
+            throw new RepositoryException(e);//TODO Add logger
+        }
     }
+
+    @Override
+    public List<Developer> getAll() throws RepositoryException {
+        List<Developer> developerList = new ArrayList<>();
+        try (var prepStatement = connection.prepareStatement(GET_ALL_DEVELOPER_SQL)) {
+            prepStatement.setString(1, Status.ACTIVE.name());
+            try (var resultSet = prepStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    DbRowToDeveloperMapper
+                            .getInstance()
+                            .map(resultSet)
+                            .ifPresent(developerList::add);
+                }
+
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e); // TODO Add logger
+        }
+        return developerList;
+    }
+
+    @Override
+    public boolean deleteSpecialtyForDevelopers(Long id) throws RepositoryException {
+        try (var prepStatement = connection.prepareStatement(SET_NULL_SPECIALTY_FOR_DEVELOPERS)) {
+            prepStatement.setLong(1, id);
+            int affectedRow = prepStatement.executeUpdate();
+            return affectedRow > 0;
+        } catch (SQLException e) {
+            throw new RepositoryException(e); // TODO Add logger
+        }
+    }
+
 }
