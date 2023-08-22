@@ -1,25 +1,35 @@
 package com.shoggoth;
 
 import com.shoggoth.model.ConnectionUtil;
+import com.shoggoth.model.entity.Developer;
+import com.shoggoth.model.entity.Skill;
+import com.shoggoth.model.entity.Specialty;
 import com.shoggoth.model.exceptions.RepositoryException;
+import com.shoggoth.model.exceptions.ServiceException;
 import com.shoggoth.model.repository.impl.JdbcDeveloperRepositoryImpl;
 import com.shoggoth.model.repository.impl.JdbcSkillRepositoryImpl;
 import com.shoggoth.model.repository.impl.JdbcSpecialtyRepositoryImpl;
+import com.shoggoth.model.service.impl.DeveloperServiceImpl;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 
 public class Main {
-    public static void main(String[] args) throws SQLException, RepositoryException {
-        Connection connection = ConnectionUtil.getConnection();
-        var jdbcDeveloperRepository = new JdbcDeveloperRepositoryImpl(connection);
-        var jdbcSkillRepository = new JdbcSkillRepositoryImpl(connection);
-        var jdbcSpecialtyRepository = new JdbcSpecialtyRepositoryImpl(connection);
+    public static void main(String[] args) throws SQLException, RepositoryException, ServiceException {
+        var developerService = new DeveloperServiceImpl();
+        Developer developer = new Developer(0, "Ivan", "Ivanov", null, null, null);
+        Specialty specialty = new Specialty(0, "frontend",null);
+        List<Skill> skills = List.of(
+                new Skill(0, "Typescript", null ),
+                new Skill(0, "NodeJS", null ),
+                new Skill(0, "Docker", null ));
 
-        jdbcSkillRepository.getAll().forEach(System.out::println);
-        jdbcSpecialtyRepository.getAll().forEach(System.out::println);
-        jdbcDeveloperRepository.deleteSpecialtyForDevelopers(1L);
-        jdbcDeveloperRepository.getAll().forEach(System.out::println);
+        developerService.add(developer, skills, specialty);
+
+
+
+
 
     }
 }

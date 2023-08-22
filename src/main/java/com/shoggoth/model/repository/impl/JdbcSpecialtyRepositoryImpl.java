@@ -96,13 +96,10 @@ public class JdbcSpecialtyRepositoryImpl implements SpecialtyRepository {
             prepStatement.setString(1, specialty.getName());
             prepStatement.setLong(2, specialty.getId());
             prepStatement.setString(3, Status.ACTIVE.name());
-            prepStatement.executeUpdate();
-            try (var resultSet = prepStatement.getGeneratedKeys()) {
-                if (resultSet.next()) {
-                    specialty.setId(resultSet.getLong(1));
-                    specialty.setStatus(Status.ACTIVE);
-                    maybeSpecialty = Optional.of(specialty);
-                }
+            int affectedRows = prepStatement.executeUpdate();
+            if (affectedRows == 1) {
+                specialty.setStatus(Status.ACTIVE);
+                maybeSpecialty = Optional.of(specialty);
             }
         } catch (SQLException e) {
             throw new RepositoryException(e); //TODO Add logger

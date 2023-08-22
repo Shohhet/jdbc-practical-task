@@ -6,20 +6,22 @@
 
     <groupId>com.shoggoth</groupId>
     <artifactId>jdbc-practical-task</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
 
     <properties>
-        <maven.compiler.source>20</maven.compiler.source>
-        <maven.compiler.target>20</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <mysql.connector.version>8.0.33</mysql.connector.version>
+        <liquibase.plugin.version>4.23.1</liquibase.plugin.version>
+        <properties.path>src/main/resources</properties.path>
     </properties>
     <dependencies>
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
-            <version>8.0.33</version>
+            <version>${mysql.connector.version}</version>
         </dependency>
-
     </dependencies>
     <build>
         <pluginManagement>
@@ -27,20 +29,19 @@
                 <plugin>
                     <groupId>org.liquibase</groupId>
                     <artifactId>liquibase-maven-plugin</artifactId>
-                    <version>4.23.1</version>
+                    <version>${liquibase.plugin.version}</version>
                     <configuration>
-                        <propertyFile>src/main/resources/liquibase.properties</propertyFile>
+                        <propertyFile>${properties.path}/liquibase.properties</propertyFile>
                     </configuration>
                     <dependencies>
                         <dependency>
                             <groupId>mysql</groupId>
                             <artifactId>mysql-connector-java</artifactId>
-                            <version>8.0.33</version>
+                            <version>${mysql.connector.version}</version>
                         </dependency>
                     </dependencies>
                 </plugin>
             </plugins>
         </pluginManagement>
     </build>
-
 </project>

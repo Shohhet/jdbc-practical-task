@@ -94,17 +94,14 @@ public class JdbcSkillRepositoryImpl implements SkillRepository {
     @Override
     public Optional<Skill> update(Skill skill) throws RepositoryException {
         Optional<Skill> maybeSkill = Optional.empty();
-        try (var prepStatement = connection.prepareStatement(UPDATE_SKILL_SQL, Statement.RETURN_GENERATED_KEYS)) {
+        try (var prepStatement = connection.prepareStatement(UPDATE_SKILL_SQL)) {
             prepStatement.setString(1, skill.getName());
             prepStatement.setLong(2, skill.getId());
             prepStatement.setString(3, Status.ACTIVE.name());
-            prepStatement.executeUpdate();
-            try (var resultSet = prepStatement.getGeneratedKeys()) {
-                if (resultSet.next()) {
-                    skill.setId(resultSet.getLong(1));
-                    skill.setStatus(Status.ACTIVE);
-                    maybeSkill = Optional.of(skill);
-                }
+            int affectedRows = prepStatement.executeUpdate();
+            if (affectedRows == 1) {
+                skill.setStatus(Status.ACTIVE);
+                maybeSkill = Optional.of(skill);
             }
         } catch (SQLException e) {
             throw new RepositoryException(e); //TODO Add logger

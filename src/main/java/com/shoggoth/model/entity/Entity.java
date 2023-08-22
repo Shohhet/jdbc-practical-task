@@ -6,10 +6,10 @@ public abstract class Entity {
     private long id;
     private Status status;
 
-    public Entity() {
+    Entity() {
     }
 
-    public Entity(long id, Status status) {
+    Entity(long id, Status status) {
         this.id = id;
         this.status = status;
     }

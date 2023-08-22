@@ -60,10 +60,15 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
             WHERE developer_skill.developer_id = ?;
             """;
 
-    private static final String SET_NULL_SPECIALTY_FOR_DEVELOPERS = """
+    private static final String SET_NULL_SPECIALTY_FOR_DEVELOPERS_SQL = """
             UPDATE developer
             SET specialty_id = NULL
             WHERE specialty_id = ?
+            """;
+    private static final String UPDATE_DEVELOPER_SPECIALTY_SQL = """
+            UPDATE developer
+            SET specialty_id = ?
+            WHERE id = ?
             """;
 
     @Override
@@ -160,7 +165,7 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
 
     @Override
     public boolean deleteSpecialtyForDevelopers(Long id) throws RepositoryException {
-        try (var prepStatement = connection.prepareStatement(SET_NULL_SPECIALTY_FOR_DEVELOPERS)) {
+        try (var prepStatement = connection.prepareStatement(SET_NULL_SPECIALTY_FOR_DEVELOPERS_SQL)) {
             prepStatement.setLong(1, id);
             int affectedRow = prepStatement.executeUpdate();
             return affectedRow > 0;
@@ -169,4 +174,27 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
         }
     }
 
+    @Override
+    public boolean setSpecialtyId(Long developerId, Long specialtyId) throws RepositoryException {
+        try (var prepStatement = connection.prepareStatement(UPDATE_DEVELOPER_SPECIALTY_SQL)) {
+            prepStatement.setLong(1, specialtyId);
+            prepStatement.setLong(2, developerId);
+            int affectedRows = prepStatement.executeUpdate();
+            return affectedRows == 1;
+        } catch (SQLException e) {
+            throw new RepositoryException(); // TODO Add logger
+        }
+    }
+
+    @Override
+    public boolean addDeveloperSkill(Long developerId, Long skillId) throws RepositoryException {
+        try (var prepStatement = connection.prepareStatement(ADD_DEVELOPER_SKILL_SQL)) {
+            prepStatement.setLong(1, developerId);
+            prepStatement.setLong(2, skillId);
+            int affectedRows = prepStatement.executeUpdate();
+            return affectedRows == 1;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

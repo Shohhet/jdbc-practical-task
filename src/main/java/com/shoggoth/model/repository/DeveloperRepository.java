@@ -21,5 +21,10 @@ public interface DeveloperRepository extends GenericRepository<Long, Developer> 
 
     @Override
     List<Developer> getAll() throws RepositoryException;
+
     boolean deleteSpecialtyForDevelopers(Long id) throws RepositoryException;
+
+    boolean setSpecialtyId(Long developerId, Long specialtyId) throws RepositoryException;
+    boolean addDeveloperSkill(Long developerId, Long skillId) throws RepositoryException;
+
 }
