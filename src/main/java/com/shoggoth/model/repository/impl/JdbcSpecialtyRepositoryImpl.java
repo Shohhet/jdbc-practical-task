@@ -44,7 +44,7 @@ public class JdbcSpecialtyRepositoryImpl implements SpecialtyRepository {
             WHERE status = ?;
             """;
 
-    private final Connection connection;
+    private Connection connection;
 
     public JdbcSpecialtyRepositoryImpl(Connection connection) {
         this.connection = connection;
@@ -138,5 +138,10 @@ public class JdbcSpecialtyRepositoryImpl implements SpecialtyRepository {
             throw new RuntimeException(e); // TODO Add logger
         }
         return specialtyList;
+    }
+
+    @Override
+    public void setConnection(Connection connection) {
+        this.connection = connection;
     }
 }

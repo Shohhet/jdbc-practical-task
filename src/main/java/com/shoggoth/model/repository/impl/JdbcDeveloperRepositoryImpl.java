@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
-    private final Connection connection;
+    private Connection connection;
 
     public JdbcDeveloperRepositoryImpl(Connection connection) {
         this.connection = connection;
@@ -196,5 +196,10 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void setConnection(Connection connection) {
+        this.connection = connection;
     }
 }

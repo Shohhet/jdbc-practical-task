@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Optional;
 
 public class JdbcSkillRepositoryImpl implements SkillRepository {
-
     private static final String ADD_SKILL_SQL = """
             INSERT INTO skill (name, status)
             VALUES(?, ?)
@@ -46,12 +45,7 @@ public class JdbcSkillRepositoryImpl implements SkillRepository {
             FROM skill
             WHERE status = ?;
             """;
-    private final Connection connection;
-
-    public JdbcSkillRepositoryImpl(Connection connection) {
-        this.connection = connection;
-    }
-
+    private Connection connection;
 
     @Override
     public Optional<Skill> add(Skill skill) throws RepositoryException {
@@ -123,11 +117,10 @@ public class JdbcSkillRepositoryImpl implements SkillRepository {
     }
 
     @Override
-    public boolean deleteForDevelopers(Long id) throws RepositoryException {
+    public void deleteForDevelopers(Long id) throws RepositoryException {
         try (var prepStatement = connection.prepareStatement(DELETE_SKILL_FOR_DEVELOPERS_SQL)) {
             prepStatement.setLong(1, id);
-            int affectedRows = prepStatement.executeUpdate();
-            return affectedRows > 0;
+            prepStatement.executeUpdate();
         } catch (SQLException e) {
             throw new RepositoryException(e);//TODO Add logger
         }
@@ -151,6 +144,11 @@ public class JdbcSkillRepositoryImpl implements SkillRepository {
             throw new RuntimeException(e); // TODO Add logger
         }
         return skillList;
+    }
+
+    @Override
+    public void setConnection(Connection connection) {
+        this.connection = connection;
     }
 
 }

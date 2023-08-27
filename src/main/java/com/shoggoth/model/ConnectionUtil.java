@@ -30,8 +30,12 @@ public class ConnectionUtil {
         return mysqlDataSource;
     }
 
-    public static Connection getConnection() throws SQLException {
-        return getDataSource().getConnection();
+    public static Connection getConnection() {
+        try {
+            return getDataSource().getConnection();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
 
     }
 

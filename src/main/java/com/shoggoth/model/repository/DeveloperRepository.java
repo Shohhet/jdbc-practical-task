@@ -3,6 +3,7 @@ package com.shoggoth.model.repository;
 import com.shoggoth.model.entity.Developer;
 import com.shoggoth.model.exceptions.RepositoryException;
 
+import java.sql.Connection;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,9 +23,11 @@ public interface DeveloperRepository extends GenericRepository<Long, Developer> 
     @Override
     List<Developer> getAll() throws RepositoryException;
 
+    @Override
+    void setConnection(Connection connection);
+
     boolean deleteSpecialtyForDevelopers(Long id) throws RepositoryException;
-
     boolean setSpecialtyId(Long developerId, Long specialtyId) throws RepositoryException;
-    boolean addDeveloperSkill(Long developerId, Long skillId) throws RepositoryException;
 
+    boolean addDeveloperSkill(Long developerId, Long skillId) throws RepositoryException;
 }

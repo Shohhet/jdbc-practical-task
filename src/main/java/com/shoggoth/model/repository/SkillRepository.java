@@ -22,6 +22,6 @@ public interface SkillRepository extends GenericRepository<Long, Skill> {
     @Override
     List<Skill> getAll() throws RepositoryException;
 
-    boolean deleteForDevelopers(Long id) throws RepositoryException;
+    void deleteForDevelopers(Long id) throws RepositoryException;
 }
 

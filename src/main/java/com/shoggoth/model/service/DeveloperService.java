@@ -9,11 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface DeveloperService {
-    Optional<Developer> add(Developer developer, List<Skill> skills, Specialty specialty) throws ServiceException;
-    Optional<Developer> get(Long id) throws ServiceException;
-    Optional<Developer> update(Developer developer, List<Skill> skills, Specialty specialty) throws ServiceException;
-    boolean delete(Long id) throws ServiceException;
-    List<Developer> getAll() throws ServiceException;
+
 
 
 }
