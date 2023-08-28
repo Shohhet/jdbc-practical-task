@@ -14,19 +14,14 @@ import java.util.Optional;
 public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
     private Connection connection;
 
-    public JdbcDeveloperRepositoryImpl(Connection connection) {
-        this.connection = connection;
-    }
-
-
     private static final String ADD_DEVELOPER_SQL = """
-            INSERT INTO developer (first_name, last_name, status)
-            VALUES (?, ?, ?)
+            INSERT INTO developer (first_name, last_name, specialty_id, status)
+            VALUES (?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE status = ?;
             """;
     private static final String UPDATE_DEVELOPER_SQL = """
             UPDATE developer
-            SET first_name = ?, last_name = ?
+            SET first_name = ?, last_name = ?, specialty_id = ?
             WHERE id = ? AND status = ?;
             """;
     private static final String ADD_DEVELOPER_SKILL_SQL = """
@@ -45,9 +40,9 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
             """;
 
     private static final String GET_DEVELOPER_SQL = """
-            SELECT id, first_name, last_name, status
-            FROM developer
-            WHERE id = ? AND status = ?;
+            SELECT developer.id, developer.first_name, developer.last_name, developer.specialty_id, specialty.name, specialty.status, developer.status
+            FROM developer INNER JOIN specialty ON developer.specialty_id = specialty.id
+            WHERE developer.id = ? AND developer.status = ? AND specialty.status = ?;
             """;
     private static final String GET_ALL_DEVELOPER_SQL = """
             SELECT id, first_name, last_name, status
@@ -65,11 +60,7 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
             SET specialty_id = NULL
             WHERE specialty_id = ?
             """;
-    private static final String UPDATE_DEVELOPER_SPECIALTY_SQL = """
-            UPDATE developer
-            SET specialty_id = ?
-            WHERE id = ?
-            """;
+
 
     @Override
     public Optional<Developer> add(Developer developer) throws RepositoryException {
@@ -77,8 +68,9 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
         try (var prepStatement = connection.prepareStatement(ADD_DEVELOPER_SQL, Statement.RETURN_GENERATED_KEYS)) {
             prepStatement.setString(1, developer.getFirstName());
             prepStatement.setString(2, developer.getLastName());
-            prepStatement.setString(3, Status.ACTIVE.name());
+            prepStatement.setLong(3, developer.getSpecialty().getId());
             prepStatement.setString(4, Status.ACTIVE.name());
+            prepStatement.setString(5, Status.ACTIVE.name());
             prepStatement.executeUpdate();
             try (var resultSet = prepStatement.getGeneratedKeys()) {
                 if (resultSet.next()) {
@@ -174,27 +166,14 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
         }
     }
 
-    @Override
-    public boolean setSpecialtyId(Long developerId, Long specialtyId) throws RepositoryException {
-        try (var prepStatement = connection.prepareStatement(UPDATE_DEVELOPER_SPECIALTY_SQL)) {
-            prepStatement.setLong(1, specialtyId);
-            prepStatement.setLong(2, developerId);
-            int affectedRows = prepStatement.executeUpdate();
-            return affectedRows == 1;
-        } catch (SQLException e) {
-            throw new RepositoryException(); // TODO Add logger
-        }
-    }
-
-    @Override
-    public boolean addDeveloperSkill(Long developerId, Long skillId) throws RepositoryException {
+        @Override
+    public void addDeveloperSkill(Long developerId, Long skillId) throws RepositoryException {
         try (var prepStatement = connection.prepareStatement(ADD_DEVELOPER_SKILL_SQL)) {
             prepStatement.setLong(1, developerId);
             prepStatement.setLong(2, skillId);
             int affectedRows = prepStatement.executeUpdate();
-            return affectedRows == 1;
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new RepositoryException(e);
         }
     }
 

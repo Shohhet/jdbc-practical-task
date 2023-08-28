@@ -25,4 +25,8 @@ public interface SpecialtyRepository extends GenericRepository<Long, Specialty> 
 
     @Override
     void setConnection(Connection connection);
+
+    Optional<Specialty> getByName(Specialty specialty) throws RepositoryException;
+
+
 }

@@ -29,7 +29,7 @@ public class JdbcSkillRepositoryImpl implements SkillRepository {
             WHERE skill_id = ?;
             """;
 
-    private static final String GET_SKILL_SQL = """
+    private static final String GET_SKILL_BY_ID_SQL = """
             SELECT id, name, status
             FROM skill
             WHERE  id = ? AND status = ?;
@@ -45,6 +45,18 @@ public class JdbcSkillRepositoryImpl implements SkillRepository {
             FROM skill
             WHERE status = ?;
             """;
+
+    private static final String GET_SKILL_BY_NAME_SQL = """
+            SELECT id, name, status
+            FROM skill
+            WHERE name LIKE ? AND status LIKE ?;
+            """;
+    private static final String GET_SKILLS_BY_DEVELOPER_ID_SQL = """
+            SELECT id, name, status
+            FROM developer_skill INNER JOIN skill ON developer_skill.skill_id = skill.id
+            WHERE developer_id = ? AND status = ?;
+            """;
+
     private Connection connection;
 
     @Override
@@ -71,7 +83,7 @@ public class JdbcSkillRepositoryImpl implements SkillRepository {
     @Override
     public Optional<Skill> getById(Long id) throws RepositoryException {
         Optional<Skill> maybeSkill = Optional.empty();
-        try (var prepStatement = connection.prepareStatement(GET_SKILL_SQL)) {
+        try (var prepStatement = connection.prepareStatement(GET_SKILL_BY_ID_SQL)) {
             prepStatement.setLong(1, id);
             prepStatement.setString(2, Status.ACTIVE.name());
             try (var resultSet = prepStatement.executeQuery()) {
@@ -141,7 +153,45 @@ public class JdbcSkillRepositoryImpl implements SkillRepository {
 
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e); // TODO Add logger
+            throw new RepositoryException(e); // TODO Add logger
+        }
+        return skillList;
+    }
+
+    @Override
+    public Optional<Skill> getByName(Skill skill) throws RepositoryException {
+        Optional<Skill> maybeSkill = Optional.empty();
+        try (var prepStatement = connection.prepareStatement(GET_SKILL_BY_NAME_SQL)) {
+            prepStatement.setString(1, skill.getName());
+            prepStatement.setString(2, Status.ACTIVE.name());
+            try (var resultSet = prepStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    maybeSkill = DbRowToSkillMapper.getInstance().map(resultSet);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RepositoryException(e); // TODO Add logger
+        }
+        return maybeSkill;
+    }
+
+    @Override
+    public List<Skill> getDeveloperSkills(Long id) throws RepositoryException {
+        List<Skill> skillList = new ArrayList<>();
+        try (var prepStatement = connection.prepareStatement(GET_SKILLS_BY_DEVELOPER_ID_SQL)) {
+            prepStatement.setLong(1, id);
+            prepStatement.setString(2, Status.ACTIVE.name());
+            try (var resultSet = prepStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    DbRowToSkillMapper
+                            .getInstance()
+                            .map(resultSet)
+                            .ifPresent(skillList::add);
+                }
+
+            }
+        } catch (SQLException e) {
+            throw new RepositoryException(e); // TODO Add logger
         }
         return skillList;
     }

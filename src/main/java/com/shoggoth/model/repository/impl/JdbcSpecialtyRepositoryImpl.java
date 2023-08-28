@@ -26,7 +26,7 @@ public class JdbcSpecialtyRepositoryImpl implements SpecialtyRepository {
             WHERE id = ? AND status LIKE ?;
             """;
 
-    private static final String GET_SPECIALTY_NAME_SQL = """
+    private static final String GET_SPECIALTY_BY_ID_SQL = """
             SELECT id, name, status
             FROM specialty
             WHERE id = ? AND status LIKE ?;
@@ -44,11 +44,12 @@ public class JdbcSpecialtyRepositoryImpl implements SpecialtyRepository {
             WHERE status = ?;
             """;
 
+    private static final String GET_SPECIALTY_BY_NAME_SQL = """
+            SELECT id, name, status
+            FROM specialty
+            WHERE name LIKE ? AND status LIKE ?;
+            """;
     private Connection connection;
-
-    public JdbcSpecialtyRepositoryImpl(Connection connection) {
-        this.connection = connection;
-    }
 
 
     @Override
@@ -75,7 +76,7 @@ public class JdbcSpecialtyRepositoryImpl implements SpecialtyRepository {
     @Override
     public Optional<Specialty> getById(Long id) throws RepositoryException {
         Optional<Specialty> maybeSpecialty = Optional.empty();
-        try (var prepStatement = connection.prepareStatement(GET_SPECIALTY_NAME_SQL)) {
+        try (var prepStatement = connection.prepareStatement(GET_SPECIALTY_BY_ID_SQL)) {
             prepStatement.setLong(1, id);
             prepStatement.setString(2, Status.ACTIVE.name());
             try (var resultSet = prepStatement.executeQuery()) {
@@ -138,6 +139,23 @@ public class JdbcSpecialtyRepositoryImpl implements SpecialtyRepository {
             throw new RuntimeException(e); // TODO Add logger
         }
         return specialtyList;
+    }
+
+    @Override
+    public Optional<Specialty> getByName(Specialty specialty) throws RepositoryException {
+        Optional<Specialty> maybeSpecialty = Optional.empty();
+        try (var prepStatement = connection.prepareStatement(GET_SPECIALTY_BY_NAME_SQL)) {
+            prepStatement.setString(1, specialty.getName());
+            prepStatement.setString(2, Status.ACTIVE.name());
+            try (var resultSet = prepStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    maybeSpecialty = DbRowToSpecialtyMapper.getInstance().map(resultSet);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RepositoryException(e); // TODO Add logger
+        }
+        return maybeSpecialty;
     }
 
     @Override

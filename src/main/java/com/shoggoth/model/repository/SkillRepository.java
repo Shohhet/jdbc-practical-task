@@ -23,5 +23,8 @@ public interface SkillRepository extends GenericRepository<Long, Skill> {
     List<Skill> getAll() throws RepositoryException;
 
     void deleteForDevelopers(Long id) throws RepositoryException;
+
+    Optional<Skill> getByName(Skill skill) throws RepositoryException;
+    List<Skill> getDeveloperSkills(Long id) throws RepositoryException;
 }
 
