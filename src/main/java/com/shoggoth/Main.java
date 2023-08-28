@@ -17,14 +17,19 @@ import java.sql.SQLException;
 import java.util.List;
 
 public class Main {
-    public static void main(String[] args) throws SQLException, RepositoryException, ServiceException {
-        Developer developer = new Developer(0, "Ivan", "Ivanov", null, null, null);
-        Specialty specialty = new Specialty(0, "frontend", null);
+    public static void main(String[] args) throws ServiceException, SQLException, RepositoryException {
         var specialtyService = new SpecialtyServiceImpl(new JdbcSpecialtyRepositoryImpl(), new JdbcDeveloperRepositoryImpl(), new TransactionUtil());
-        specialtyService.getAll().forEach(System.out::println);
-        specialtyService.update(1L, "frontend");
-        specialtyService.get(1L).ifPresent(System.out::println);
+        var skillService = new SkillServiceImpl(new JdbcSkillRepositoryImpl(), new TransactionUtil());
+        var developerService = new DeveloperServiceImpl(
+                new JdbcSpecialtyRepositoryImpl(),
+                new JdbcDeveloperRepositoryImpl(),
+                new JdbcSkillRepositoryImpl(),
+                new TransactionUtil()
+        );
 
+//       developerService.add("Denis", "Petrov", List.of("1111"), null);
+
+       developerService.get(9L).ifPresentOrElse(System.out::println, () -> System.out.println("Empty"));
 
     }
 }

@@ -41,8 +41,8 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
 
     private static final String GET_DEVELOPER_SQL = """
             SELECT developer.id, developer.first_name, developer.last_name, developer.specialty_id, specialty.name, specialty.status, developer.status
-            FROM developer INNER JOIN specialty ON developer.specialty_id = specialty.id
-            WHERE developer.id = ? AND developer.status = ? AND specialty.status = ?;
+            FROM developer LEFT JOIN specialty ON developer.specialty_id = specialty.id
+            WHERE developer.id = ? AND developer.status = ?;
             """;
     private static final String GET_ALL_DEVELOPER_SQL = """
             SELECT id, first_name, last_name, status
@@ -65,10 +65,11 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
     @Override
     public Optional<Developer> add(Developer developer) throws RepositoryException {
         Optional<Developer> maybeDeveloper = Optional.empty();
+        String specialtyName = developer.getSpecialty().getName();
         try (var prepStatement = connection.prepareStatement(ADD_DEVELOPER_SQL, Statement.RETURN_GENERATED_KEYS)) {
             prepStatement.setString(1, developer.getFirstName());
             prepStatement.setString(2, developer.getLastName());
-            prepStatement.setLong(3, developer.getSpecialty().getId());
+            prepStatement.setObject(3, developer.getSpecialty().getName() == null ? null : developer.getSpecialty().getId());
             prepStatement.setString(4, Status.ACTIVE.name());
             prepStatement.setString(5, Status.ACTIVE.name());
             prepStatement.executeUpdate();

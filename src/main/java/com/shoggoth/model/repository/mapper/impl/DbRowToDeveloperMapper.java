@@ -24,14 +24,18 @@ public class DbRowToDeveloperMapper implements DbRowToEntityMapper<Developer> {
     public Optional<Developer> map(ResultSet resultSet) throws RepositoryException {
         Optional<Developer> maybeDeveloper;
         try {
+            Specialty specialty = null;
             Developer developer = new Developer();
-            Specialty specialty = new Specialty();
             developer.setId(resultSet.getLong("developer.id")); //TODO create constants for column names
             developer.setFirstName(resultSet.getString("developer.first_name"));
             developer.setLastName(resultSet.getString("developer.last_name"));
-            specialty.setId(resultSet.getLong("developer.specialty_id"));
-            specialty.setName(resultSet.getString("specialty.name"));
-            specialty.setStatus(Status.valueOf(resultSet.getString("specialty.status")));
+            String specialtyName = resultSet.getString("specialty.name");
+            if (specialtyName != null) {
+                specialty = new Specialty();
+                specialty.setName(specialtyName);
+                specialty.setId(resultSet.getLong("developer.specialty_id"));
+                specialty.setStatus(Status.valueOf(resultSet.getString("specialty.status")));
+            }
             developer.setSpecialty(specialty);
             developer.setStatus(Status.valueOf(resultSet.getString("developer.status")));
             maybeDeveloper = Optional.of(developer);

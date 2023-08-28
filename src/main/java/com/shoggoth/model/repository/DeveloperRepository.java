@@ -29,5 +29,6 @@ public interface DeveloperRepository extends GenericRepository<Long, Developer> 
 
     boolean deleteSpecialtyForDevelopers(Long id) throws RepositoryException;
 
+
     void addDeveloperSkill(Long developerId, Long skillId) throws RepositoryException;
 }

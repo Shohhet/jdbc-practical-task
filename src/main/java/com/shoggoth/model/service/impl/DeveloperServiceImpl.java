@@ -44,24 +44,35 @@ public class DeveloperServiceImpl implements DeveloperService {
         developer.setLastName(lastName);
         try {
             transaction.begin(developerRepository, specialtyRepository, skillRepository);
-            specialty.setName(specialtyName);
-            specialty = specialtyRepository
-                    .getByName(specialty)
-                    .orElse(specialtyRepository
-                            .add(specialty)
-                            .orElseThrow(() -> new RepositoryException("Can't add specialty.")));
+            if (specialtyName != null && !specialtyName.isEmpty()) {
+                specialty.setName(specialtyName);
+                var maybeSpecialty = specialtyRepository.getByName(specialty);
+                if (maybeSpecialty.isPresent()) {
+                    specialty = maybeSpecialty.get();
+                } else {
+                    maybeSpecialty = specialtyRepository.add(specialty);
+                    if (maybeSpecialty.isPresent()) {
+                        specialty = maybeSpecialty.get();
+                    }
+                }
+            }
             developer.setSpecialty(specialty);
-            developer = developerRepository.add(developer).orElseThrow(() -> new RepositoryException("Can't add developer."));
+            developer = developerRepository.add(developer).orElseThrow(() -> new ServiceException("Can't add developer."));
 
             if (skillNames != null) {
                 for (String name : skillNames) {
                     skill.setName(name);
-                    skill = skillRepository
-                            .getByName(skill)
-                            .orElse(skillRepository
-                                    .add(skill)
-                                    .orElseThrow(() -> new RepositoryException("Can't add skill")));
-                    developerRepository.addDeveloperSkill(developer.getId(), skill.getId());
+                    var maybeSkill = skillRepository.getByName(skill);
+                    if (maybeSkill.isPresent()) {
+                        skill = maybeSkill.get();
+                        developerRepository.addDeveloperSkill(developer.getId(), skill.getId());
+                    } else {
+                        maybeSkill = skillRepository.add(skill);
+                        if (maybeSkill.isPresent()) {
+                            skill = maybeSkill.get();
+                            developerRepository.addDeveloperSkill(developer.getId(), skill.getId());
+                        }
+                    }
                 }
                 developer.setSkills(skillRepository.getDeveloperSkills(developer.getId()));
                 maybeDeveloper = Optional.of(developer);
@@ -75,7 +86,7 @@ public class DeveloperServiceImpl implements DeveloperService {
                 throw new ServiceException(ex);
             }
             throw new ServiceException(e);
-        }finally {
+        } finally {
             try {
                 transaction.end();
             } catch (SQLException e) {
@@ -87,11 +98,49 @@ public class DeveloperServiceImpl implements DeveloperService {
 
     @Override
     public Optional<Developer> get(Long id) throws ServiceException {
-        return Optional.empty();
+        Optional<Developer> maybeDeveloper;
+        Developer developer;
+        try {
+            transaction.begin(developerRepository, specialtyRepository, skillRepository);
+            maybeDeveloper = developerRepository.getById(id);
+            if (maybeDeveloper.isPresent()) {
+                developer = maybeDeveloper.get();
+                List<Skill> skills = skillRepository.getDeveloperSkills(developer.getId());
+                developer.setSkills(skills);
+                maybeDeveloper = Optional.of(developer);
+            }
+        } catch (RepositoryException | SQLException e) {
+            throw new ServiceException(e);
+        } finally {
+            try {
+                transaction.end();
+            } catch (SQLException e) {
+                throw new ServiceException(e);
+            }
+        }
+        return maybeDeveloper;
     }
 
     @Override
     public Optional<Developer> update(Long id, String firstName, String lastName, List<String> skillNames, String specialtyName) throws ServiceException {
+
+        try {
+            transaction.begin(developerRepository, specialtyRepository, skillRepository);
+            var maybeDeveloper = developerRepository.getById(id);
+
+            if (maybeDeveloper.isPresent()) {
+                var developer = maybeDeveloper.get();
+                Specialty updatedSpecialty = new Specialty();
+                updatedSpecialty.setId(developer.getSpecialty().getId());
+                updatedSpecialty.setName(specialtyName);
+                specialtyRepository.update(updatedSpecialty).ifPresent(developer::setSpecialty);
+
+
+            }
+
+        } catch (SQLException | RepositoryException e) {
+            throw new RuntimeException(e);
+        }
         return Optional.empty();
     }
 
