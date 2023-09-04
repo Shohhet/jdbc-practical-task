@@ -2,19 +2,19 @@ DROP DATABASE IF EXISTS jdbc_practical_task_db;
 CREATE DATABASE jdbc_practical_task_db;
 USE jdbc_practical_task_db;
 
-CREATE TABLE specialty (
+CREATE TABLE specialtyEntity (
                            id BIGINT PRIMARY KEY AUTO_INCREMENT,
                            specialty_name VARCHAR(128) UNIQUE NOT NULL,
                            specialty_status ENUM ('ACTIVE', 'DELETED')
 );
 
-CREATE TABLE skill (
+CREATE TABLE skillEntity (
                        id BIGINT PRIMARY KEY AUTO_INCREMENT,
                        skill_name VARCHAR(128) UNIQUE NOT NULL,
                        skill_status ENUM ('ACTIVE', 'DELETED')
 );
 
-CREATE TABLE developer (
+CREATE TABLE developerEntity (
                            id bigint PRIMARY KEY AUTO_INCREMENT,
                            first_name VARCHAR(128) NOT NULL,
                            last_name VARCHAR(128) NOT NULL,
@@ -28,8 +28,8 @@ CREATE TABLE developer_skill (
                                   developer_skill_status ENUM ('ACTIVE', 'DELETED')
 );
 
-ALTER TABLE developer ADD FOREIGN KEY (specialty_id) REFERENCES specialty (id);
+ALTER TABLE developerEntity ADD FOREIGN KEY (specialty_id) REFERENCES specialtyEntity (id);
 
-ALTER TABLE developer_skill ADD FOREIGN KEY (developer_id) REFERENCES developer (id);
+ALTER TABLE developer_skill ADD FOREIGN KEY (developer_id) REFERENCES developerEntity (id);
 
-ALTER TABLE developer_skill ADD FOREIGN KEY (skill_id) REFERENCES skill (id);
+ALTER TABLE developer_skill ADD FOREIGN KEY (skill_id) REFERENCES skillEntity (id);

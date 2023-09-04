@@ -8,10 +8,10 @@
     <changeSet id="4" author="shohhet">
         <createTable tableName="developer_skill">
             <column name="developer_id" type="bigint">
-                <constraints nullable="false" foreignKeyName="fk_developer_id" references="developer(id)"/>
+                <constraints nullable="false" foreignKeyName="fk_developer_id" references="developerEntity(id)"/>
             </column>
             <column name="skill_id" type="bigint">
-                <constraints nullable="false" foreignKeyName="fk_skill_id" references="skill(id)"/>
+                <constraints nullable="false" foreignKeyName="fk_skill_id" references="skillEntity(id)"/>
             </column>
         </createTable>
     </changeSet>
