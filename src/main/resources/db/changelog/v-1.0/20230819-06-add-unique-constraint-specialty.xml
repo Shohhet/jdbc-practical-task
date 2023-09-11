@@ -9,7 +9,7 @@
         <addUniqueConstraint
                 columnNames="name"
                 constraintName="specialty_name_unique_constraint"
-                tableName="specialtyEntity"
+                tableName="specialty"
         />
     </changeSet>
 </databaseChangeLog>

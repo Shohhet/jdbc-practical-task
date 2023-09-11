@@ -9,11 +9,11 @@ import java.util.Optional;
 public interface SkillService {
     Optional<SkillEntity> add(String name) throws ServiceException;
 
-    Optional<SkillEntity> get(long id) throws ServiceException;
+    Optional<SkillEntity> get(String stringId) throws ServiceException;
 
-    Optional<SkillEntity> update(long id, String name) throws ServiceException;
+    Optional<SkillEntity> update(String stringId, String name) throws ServiceException;
 
-    boolean delete(long id) throws ServiceException;
+    boolean delete(String stringId) throws ServiceException;
 
     List<SkillEntity> getAll() throws ServiceException;
 

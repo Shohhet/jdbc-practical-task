@@ -30,4 +30,5 @@ public interface DeveloperRepository extends GenericRepository<Long, DeveloperEn
 
 
     void addDeveloperSkill(Long developerId, Long skillId) throws RepositoryException;
+    void deleteDeveloperSkills(Long developerId) throws RepositoryException;
 }

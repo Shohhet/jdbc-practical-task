@@ -13,13 +13,13 @@ import java.util.Optional;
 
 public class JdbcSkillRepositoryImpl implements SkillRepository {
     private static final String ADD_SKILL_SQL = """
-            INSERT INTO skillEntity (name, status)
+            INSERT INTO skill (name, status)
             VALUES(?, ?)
             ON DUPLICATE KEY UPDATE status = ?;
             """;
 
     private static final String DELETE_SKILL_SQL = """
-            UPDATE skillEntity
+            UPDATE skill
             SET status = ?
             WHERE id = ? AND status LIKE ?;
             """;
@@ -31,29 +31,29 @@ public class JdbcSkillRepositoryImpl implements SkillRepository {
 
     private static final String GET_SKILL_BY_ID_SQL = """
             SELECT id, name, status
-            FROM skillEntity
+            FROM skill
             WHERE  id = ? AND status = ?;
             """;
 
     private static final String UPDATE_SKILL_SQL = """
-            UPDATE skillEntity
+            UPDATE skill
             SET name = ?
             WHERE id = ? AND status LIKE ?;
             """;
     private static final String GET_ALL_SKILL_SQL = """
             SELECT id, name, status
-            FROM skillEntity
+            FROM skill
             WHERE status = ?;
             """;
 
     private static final String GET_SKILL_BY_NAME_SQL = """
             SELECT id, name, status
-            FROM skillEntity
+            FROM skill
             WHERE name LIKE ? AND status LIKE ?;
             """;
     private static final String GET_SKILLS_BY_DEVELOPER_ID_SQL = """
             SELECT id, name, status
-            FROM developer_skill INNER JOIN skillEntity ON developer_skill.skill_id = skillEntity.id
+            FROM developer_skill INNER JOIN skill ON developer_skill.skill_id = skill.id
             WHERE developer_id = ? AND status = ?;
             """;
 
@@ -159,10 +159,10 @@ public class JdbcSkillRepositoryImpl implements SkillRepository {
     }
 
     @Override
-    public Optional<SkillEntity> getByName(SkillEntity skillEntity) throws RepositoryException {
+    public Optional<SkillEntity> getByName(String name) throws RepositoryException {
         Optional<SkillEntity> maybeSkill = Optional.empty();
         try (var prepStatement = connection.prepareStatement(GET_SKILL_BY_NAME_SQL)) {
-            prepStatement.setString(1, skillEntity.getName());
+            prepStatement.setString(1, name);
             prepStatement.setString(2, Status.ACTIVE.name());
             try (var resultSet = prepStatement.executeQuery()) {
                 if (resultSet.next()) {

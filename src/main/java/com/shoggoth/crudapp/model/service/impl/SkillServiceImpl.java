@@ -1,6 +1,6 @@
 package com.shoggoth.crudapp.model.service.impl;
 
-import com.shoggoth.crudapp.model.TransactionUtil;
+import com.shoggoth.crudapp.model.service.util.TransactionUtil;
 import com.shoggoth.crudapp.model.entity.SkillEntity;
 import com.shoggoth.crudapp.model.exceptions.RepositoryException;
 import com.shoggoth.crudapp.model.exceptions.ServiceException;
@@ -48,8 +48,9 @@ public class SkillServiceImpl implements SkillService {
     }
 
     @Override
-    public Optional<SkillEntity> get(long id) throws ServiceException {
+    public Optional<SkillEntity> get(String stringId) throws ServiceException {
         Optional<SkillEntity> maybeSkill;
+        Long id = Long.parseLong(stringId);
         try {
             transaction.begin(repository);
             maybeSkill = repository.getById(id);
@@ -66,8 +67,9 @@ public class SkillServiceImpl implements SkillService {
     }
 
     @Override
-    public Optional<SkillEntity> update(long id, String name) throws ServiceException {
+    public Optional<SkillEntity> update(String stringId, String name) throws ServiceException {
         SkillEntity skillEntity = new SkillEntity();
+        Long id = Long.parseLong(stringId);
         skillEntity.setId(id);
         skillEntity.setName(name);
         Optional<SkillEntity> maybeSkill;
@@ -93,8 +95,9 @@ public class SkillServiceImpl implements SkillService {
     }
 
     @Override
-    public boolean delete(long id) throws ServiceException {
+    public boolean delete(String stringId) throws ServiceException {
         boolean result = false;
+        Long id = Long.parseLong(stringId);
         try {
             transaction.begin(repository);
             if (repository.delete(id)) {

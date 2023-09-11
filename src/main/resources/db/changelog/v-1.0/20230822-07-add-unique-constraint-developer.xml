@@ -9,7 +9,7 @@
         <addUniqueConstraint
                 columnNames="first_name, last_name"
                 constraintName="developer_name_unique_constraint"
-                tableName="developerEntity"
+                tableName="developer"
         />
     </changeSet>
 </databaseChangeLog>

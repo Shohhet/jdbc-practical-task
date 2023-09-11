@@ -7,8 +7,10 @@ import com.shoggoth.crudapp.controller.command.CommandType;
 import com.shoggoth.crudapp.controller.command.impl.DefaultCommand;
 import com.shoggoth.crudapp.controller.command.impl.ExitCommand;
 import com.shoggoth.crudapp.controller.command.impl.HelpCommand;
+import com.shoggoth.crudapp.controller.command.impl.developer.*;
+import com.shoggoth.crudapp.controller.command.impl.skill.*;
 import com.shoggoth.crudapp.controller.command.impl.specialty.*;
-import com.shoggoth.crudapp.model.TransactionUtil;
+import com.shoggoth.crudapp.model.service.util.TransactionUtil;
 import com.shoggoth.crudapp.model.repository.DeveloperRepository;
 import com.shoggoth.crudapp.model.repository.SkillRepository;
 import com.shoggoth.crudapp.model.repository.SpecialtyRepository;
@@ -51,6 +53,7 @@ public class SetupUtils {
 
         UserInterface userInterface = new UserInterface(is);
         Command defaultCommand = new DefaultCommand(userInterface);
+
         CommandContainer commandContainer = new CommandContainer(defaultCommand);
         commandContainer.addCommand(CommandType.ADD_SPECIALTY.getName(), new AddSpecialtyCommand(userInterface, specialtyService));
         commandContainer.addCommand(CommandType.GET_SPECIALTY.getName(), new GetSpecialtyCommand(userInterface, specialtyService));
@@ -59,7 +62,17 @@ public class SetupUtils {
         commandContainer.addCommand(CommandType.DELETE_SPECIALTY.getName(), new DeleteSpecialtyCommand(userInterface, specialtyService));
         commandContainer.addCommand(CommandType.EXIT.getName(), new ExitCommand(userInterface));
         commandContainer.addCommand(CommandType.HELP.getName(), new HelpCommand(userInterface));
+        commandContainer.addCommand(CommandType.ADD_SKILL.getName(), new AddSkillCommand(userInterface, skillService));
+        commandContainer.addCommand(CommandType.DELETE_SKILL.getName(), new DeleteSkillCommand(userInterface, skillService));
+        commandContainer.addCommand(CommandType.GET_ALL_SKILLS.getName(), new GetAllSkillsCommand(userInterface, skillService));
+        commandContainer.addCommand(CommandType.GET_SKILL.getName(), new GetSkillCommand(userInterface, skillService));
+        commandContainer.addCommand(CommandType.UPDATE_SKILL.getName(), new UpdateSkillCommand(userInterface, skillService));
+        commandContainer.addCommand(CommandType.ADD_DEVELOPER.getName(), new AddDeveloperCommand(userInterface, developerService));
+        commandContainer.addCommand(CommandType.GET_DEVELOPER.getName(), new GetDeveloperCommand(userInterface, developerService));
+        commandContainer.addCommand(CommandType.GET_ALL_DEVELOPERS.getName(), new GetAllDevelopersCommand(userInterface, developerService));
+        commandContainer.addCommand(CommandType.DELETE_DEVELOPER.getName(), new DeleteDeveloperCommand(userInterface, developerService));
+        commandContainer.addCommand(CommandType.UPDATE_DEVELOPER.getName(), new UpdateDeveloperCommand(userInterface, developerService));
 
-        return  new Controller(userInterface, commandContainer);
+        return new Controller(userInterface, commandContainer);
     }
 }

@@ -142,10 +142,10 @@ public class JdbcSpecialtyRepositoryImpl implements SpecialtyRepository {
     }
 
     @Override
-    public Optional<SpecialtyEntity> getByName(SpecialtyEntity specialtyEntity) throws RepositoryException {
+    public Optional<SpecialtyEntity> getByName(String name) throws RepositoryException {
         Optional<SpecialtyEntity> maybeSpecialty = Optional.empty();
         try (var prepStatement = connection.prepareStatement(GET_SPECIALTY_BY_NAME_SQL)) {
-            prepStatement.setString(1, specialtyEntity.getName());
+            prepStatement.setString(1, name);
             prepStatement.setString(2, Status.ACTIVE.name());
             try (var resultSet = prepStatement.executeQuery()) {
                 if (resultSet.next()) {

@@ -6,7 +6,7 @@
         https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
 
     <changeSet  id="3"  author="shohhet">
-        <createTable  tableName="developerEntity">
+        <createTable  tableName="developer">
             <column  name="id"  type="bigint"  autoIncrement="true">
                 <constraints  primaryKey="true"  nullable="false"/>
             </column>
@@ -17,7 +17,7 @@
                 <constraints nullable="false"/>
             </column>
             <column name="specialty_id" type="bigint">
-                <constraints foreignKeyName="fk_developer_specialty" references="specialtyEntity(id)"/>
+                <constraints foreignKeyName="fk_developer_specialty" references="specialty(id)"/>
             </column>
             <column  name="status"  type="varchar(8)">
                 <constraints nullable="false"/>

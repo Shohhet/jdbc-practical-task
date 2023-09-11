@@ -1,6 +1,6 @@
 package com.shoggoth.crudapp.model.service.impl;
 
-import com.shoggoth.crudapp.model.TransactionUtil;
+import com.shoggoth.crudapp.model.service.util.TransactionUtil;
 import com.shoggoth.crudapp.model.entity.SpecialtyEntity;
 import com.shoggoth.crudapp.model.exceptions.RepositoryException;
 import com.shoggoth.crudapp.model.exceptions.ServiceException;
@@ -25,12 +25,12 @@ public class SpecialtyServiceImpl implements SpecialtyService {
 
     @Override
     public Optional<SpecialtyEntity> add(String name) throws ServiceException {
-        SpecialtyEntity SpecialtyEntity = new SpecialtyEntity();
-        SpecialtyEntity.setName(name);
+        SpecialtyEntity specialty = new SpecialtyEntity();
+        specialty.setName(name);
         Optional<SpecialtyEntity> maybeSpecialty;
         try {
             transaction.begin(specialtyRepository);
-            maybeSpecialty = specialtyRepository.add(SpecialtyEntity);
+            maybeSpecialty = specialtyRepository.add(specialty);
             transaction.commit();
         } catch (RepositoryException | SQLException e) {
             try {
@@ -70,15 +70,15 @@ public class SpecialtyServiceImpl implements SpecialtyService {
 
     @Override
     public Optional<SpecialtyEntity> update(String stringId, String name) throws ServiceException {
-        SpecialtyEntity SpecialtyEntity = new SpecialtyEntity();
+        SpecialtyEntity specialty = new SpecialtyEntity();
         Long id = Long.parseLong(stringId);
-        SpecialtyEntity.setId(id);
-        SpecialtyEntity.setName(name);
+        specialty.setId(id);
+        specialty.setName(name);
         Optional<SpecialtyEntity> maybeSpecialty;
 
         try {
             transaction.begin(specialtyRepository);
-            maybeSpecialty = specialtyRepository.update(SpecialtyEntity);
+            maybeSpecialty = specialtyRepository.update(specialty);
             transaction.commit();
         } catch (RepositoryException | SQLException e) {
             try {

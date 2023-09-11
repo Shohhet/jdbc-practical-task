@@ -1,4 +1,4 @@
-package com.shoggoth.crudapp.model;
+package com.shoggoth.crudapp.model.service.util;
 
 import com.shoggoth.crudapp.model.repository.GenericRepository;
 

@@ -5,11 +5,11 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
 
-    <include file="20230819-01-create-skillEntity.xml" relativeToChangelogFile="true"/>
-    <include file="20230819-02-create-specialtyEntity.xml" relativeToChangelogFile="true"/>
-    <include file="20230819-03-create-developerEntity.xml" relativeToChangelogFile="true"/>
-    <include file="20230819-04-create-developerEntity-specialtyEntity.xml" relativeToChangelogFile="true"/>
-    <include file="20230819-05-add-unique-constraint-skillEntity.xml" relativeToChangelogFile="true"/>
-    <include file="20230819-06-add-unique-constraint-specialtyEntity.xml" relativeToChangelogFile="true"/>
-    <include file="20230822-07-add-unique-constraint-developerEntity.xml" relativeToChangelogFile="true"/>
+    <include file="20230819-01-create-skill.xml" relativeToChangelogFile="true"/>
+    <include file="20230819-02-create-specialty.xml" relativeToChangelogFile="true"/>
+    <include file="20230819-03-create-developer.xml" relativeToChangelogFile="true"/>
+    <include file="20230819-04-create-developer-specialty.xml" relativeToChangelogFile="true"/>
+    <include file="20230819-05-add-unique-constraint-skill.xml" relativeToChangelogFile="true"/>
+    <include file="20230819-06-add-unique-constraint-specialty.xml" relativeToChangelogFile="true"/>
+    <include file="20230822-07-add-unique-constraint-developer.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

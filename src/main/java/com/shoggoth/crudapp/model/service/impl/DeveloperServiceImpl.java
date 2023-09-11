@@ -1,6 +1,6 @@
 package com.shoggoth.crudapp.model.service.impl;
 
-import com.shoggoth.crudapp.model.TransactionUtil;
+import com.shoggoth.crudapp.model.service.util.TransactionUtil;
 import com.shoggoth.crudapp.model.entity.DeveloperEntity;
 import com.shoggoth.crudapp.model.entity.SkillEntity;
 import com.shoggoth.crudapp.model.entity.SpecialtyEntity;
@@ -37,45 +37,45 @@ public class DeveloperServiceImpl implements DeveloperService {
     @Override
     public Optional<DeveloperEntity> add(String firstName, String lastName, List<String> skillNames, String specialtyName) throws ServiceException {
         Optional<DeveloperEntity> maybeDeveloper = Optional.empty();
-        DeveloperEntity developerEntity = new DeveloperEntity();
-        SpecialtyEntity specialtyEntity = new SpecialtyEntity();
-        SkillEntity skillEntity = new SkillEntity();
-        developerEntity.setFirstName(firstName);
-        developerEntity.setLastName(lastName);
+        DeveloperEntity developer = new DeveloperEntity();
+        SpecialtyEntity specialty = new SpecialtyEntity();
+        SkillEntity skill = new SkillEntity();
+        developer.setFirstName(firstName);
+        developer.setLastName(lastName);
         try {
             transaction.begin(developerRepository, specialtyRepository, skillRepository);
             if (specialtyName != null && !specialtyName.isEmpty()) {
-                specialtyEntity.setName(specialtyName);
-                var maybeSpecialty = specialtyRepository.getByName(specialtyEntity);
+                specialty.setName(specialtyName);
+                var maybeSpecialty = specialtyRepository.getByName(specialty.getName());
                 if (maybeSpecialty.isPresent()) {
-                    specialtyEntity = maybeSpecialty.get();
+                    specialty = maybeSpecialty.get();
                 } else {
-                    maybeSpecialty = specialtyRepository.add(specialtyEntity);
+                    maybeSpecialty = specialtyRepository.add(specialty);
                     if (maybeSpecialty.isPresent()) {
-                        specialtyEntity = maybeSpecialty.get();
+                        specialty = maybeSpecialty.get();
                     }
                 }
             }
-            developerEntity.setSpecialty(specialtyEntity);
-            developerEntity = developerRepository.add(developerEntity).orElseThrow(() -> new ServiceException("Can't add developer."));
+            developer.setSpecialty(specialty);
+            developer = developerRepository.add(developer).orElseThrow(() -> new ServiceException("Can't add developer.")); //TODO remove exception?
 
             if (skillNames != null) {
                 for (String name : skillNames) {
-                    skillEntity.setName(name);
-                    var maybeSkill = skillRepository.getByName(skillEntity);
+                    var maybeSkill = skillRepository.getByName(name);
                     if (maybeSkill.isPresent()) {
-                        skillEntity = maybeSkill.get();
-                        developerRepository.addDeveloperSkill(developerEntity.getId(), skillEntity.getId());
+                        skill = maybeSkill.get();
+                        developerRepository.addDeveloperSkill(developer.getId(), skill.getId());
                     } else {
-                        maybeSkill = skillRepository.add(skillEntity);
+                        skill.setName(name);
+                        maybeSkill = skillRepository.add(skill);
                         if (maybeSkill.isPresent()) {
-                            skillEntity = maybeSkill.get();
-                            developerRepository.addDeveloperSkill(developerEntity.getId(), skillEntity.getId());
+                            skill = maybeSkill.get();
+                            developerRepository.addDeveloperSkill(developer.getId(), skill.getId());
                         }
                     }
                 }
-                developerEntity.setSkills(skillRepository.getDeveloperSkills(developerEntity.getId()));
-                maybeDeveloper = Optional.of(developerEntity);
+                developer.setSkills(skillRepository.getDeveloperSkills(developer.getId()));
+                maybeDeveloper = Optional.of(developer);
             }
             transaction.commit();
 
@@ -97,17 +97,18 @@ public class DeveloperServiceImpl implements DeveloperService {
     }
 
     @Override
-    public Optional<DeveloperEntity> get(Long id) throws ServiceException {
+    public Optional<DeveloperEntity> get(String stringId) throws ServiceException {
         Optional<DeveloperEntity> maybeDeveloper;
-        DeveloperEntity developerEntity;
+        DeveloperEntity developer;
+        Long id = Long.parseLong(stringId);
         try {
             transaction.begin(developerRepository, specialtyRepository, skillRepository);
             maybeDeveloper = developerRepository.getById(id);
             if (maybeDeveloper.isPresent()) {
-                developerEntity = maybeDeveloper.get();
-                List<SkillEntity> skillEntities = skillRepository.getDeveloperSkills(developerEntity.getId());
-                developerEntity.setSkills(skillEntities);
-                maybeDeveloper = Optional.of(developerEntity);
+                developer = maybeDeveloper.get();
+                List<SkillEntity> skills = skillRepository.getDeveloperSkills(developer.getId());
+                developer.setSkills(skills);
+                maybeDeveloper = Optional.of(developer);
             }
         } catch (RepositoryException | SQLException e) {
             throw new ServiceException(e);
@@ -122,35 +123,104 @@ public class DeveloperServiceImpl implements DeveloperService {
     }
 
     @Override
-    public Optional<DeveloperEntity> update(Long id, String firstName, String lastName, List<String> skillNames, String specialtyName) throws ServiceException {
-
+    public Optional<DeveloperEntity> update(String stringId, String firstName, String lastName, List<String> skillNames, String specialtyName) throws ServiceException {
+        Long developerId = Long.parseLong(stringId);
+        Optional<DeveloperEntity> maybeDeveloper = Optional.empty();
         try {
             transaction.begin(developerRepository, specialtyRepository, skillRepository);
-            var maybeDeveloper = developerRepository.getById(id);
-
+            maybeDeveloper = developerRepository.getById(developerId);
             if (maybeDeveloper.isPresent()) {
-                var developer = maybeDeveloper.get();
-                SpecialtyEntity updatedSpecialtyEntity = new SpecialtyEntity();
-                updatedSpecialtyEntity.setId(developer.getSpecialty().getId());
-                updatedSpecialtyEntity.setName(specialtyName);
-                specialtyRepository.update(updatedSpecialtyEntity).ifPresent(developer::setSpecialty);
-
-
+                DeveloperEntity developer = maybeDeveloper.get();
+                developer.setFirstName(firstName);
+                developer.setLastName(lastName);
+                Optional<SpecialtyEntity> maybeSpecialty;
+                maybeSpecialty = specialtyRepository.getByName(specialtyName);
+                if (maybeSpecialty.isPresent()) {
+                    developer.setSpecialty(maybeSpecialty.get());
+                } else {
+                    SpecialtyEntity specialty = new SpecialtyEntity();
+                    specialty.setName(specialtyName);
+                    maybeSpecialty = specialtyRepository.add(specialty);
+                    maybeSpecialty.ifPresent(developer::setSpecialty);
+                }
+                developerRepository.deleteDeveloperSkills(developerId);
+                for(String skillName : skillNames) {
+                    Optional<SkillEntity> maybeSkill = skillRepository.getByName(skillName);
+                    if (maybeSkill.isPresent()) {
+                        developerRepository.addDeveloperSkill(developerId, maybeSkill.get().getId());
+                    } else {
+                        SkillEntity skill = new SkillEntity();
+                        skill.setName(skillName);
+                        maybeSkill = skillRepository.add(skill);
+                        if(maybeSkill.isPresent()) {
+                            developerRepository.addDeveloperSkill(developerId, maybeSkill.get().getId());
+                        }
+                    }
+                }
+                maybeDeveloper = developerRepository.update(developer);
             }
-
-        } catch (SQLException | RepositoryException e) {
-            throw new RuntimeException(e);
+            transaction.commit();
+        } catch (RepositoryException | SQLException e) {
+            try {
+                transaction.rollback();
+            } catch (SQLException ex) {
+                throw new ServiceException(ex);
+            }
+            throw new ServiceException(e);
+        } finally {
+            try {
+                transaction.end();
+            } catch (SQLException e) {
+                throw new ServiceException(e);
+            }
         }
-        return Optional.empty();
+        return maybeDeveloper;
     }
 
     @Override
-    public boolean delete(Long id) throws ServiceException {
-        return false;
+    public boolean delete(String stringId) throws ServiceException {
+        boolean result;
+        Long id = Long.parseLong(stringId);
+        try {
+            transaction.begin(developerRepository);
+            result = developerRepository.delete(id);
+            transaction.commit();
+        } catch (RepositoryException | SQLException e) {
+            try {
+                transaction.rollback();
+            } catch (SQLException ex) {
+                throw new ServiceException(ex);
+            }
+            throw new ServiceException(e);
+        } finally {
+            try {
+                transaction.end();
+            } catch (SQLException e) {
+                throw new ServiceException(e);
+            }
+        }
+        return result;
     }
 
     @Override
     public List<DeveloperEntity> getAll() throws ServiceException {
-        return null;
+        List<DeveloperEntity> developers;
+        try {
+            transaction.begin(developerRepository, skillRepository);
+            developers = developerRepository.getAll();
+            for (DeveloperEntity developer : developers) {
+                List<SkillEntity> skills = skillRepository.getDeveloperSkills(developer.getId());
+                developer.setSkills(skills);
+            }
+        } catch (RepositoryException | SQLException e) {
+            throw new ServiceException(e);
+        } finally {
+            try {
+                transaction.end();
+            } catch (SQLException e) {
+                throw new ServiceException(e);
+            }
+        }
+        return developers;
     }
 }

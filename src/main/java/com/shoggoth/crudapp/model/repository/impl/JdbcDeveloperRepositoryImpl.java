@@ -1,6 +1,5 @@
 package com.shoggoth.crudapp.model.repository.impl;
 
-import com.shoggoth.crudapp.model.ConnectionUtils;
 import com.shoggoth.crudapp.model.entity.DeveloperEntity;
 import com.shoggoth.crudapp.model.entity.Status;
 import com.shoggoth.crudapp.model.exceptions.RepositoryException;
@@ -46,9 +45,9 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
             WHERE developer.id = ? AND developer.status = ?;
             """;
     private static final String GET_ALL_DEVELOPER_SQL = """
-            SELECT id, first_name, last_name, status
-            FROM developer
-            WHERE status = ?;
+            SELECT developer.id, developer.first_name, developer.last_name, developer.specialty_id, specialty.name, specialty.status, developer.status
+            FROM developer LEFT JOIN specialty ON developer.specialty_id = specialty.id
+            WHERE developer.status = ?;
             """;
     private static final String GET_DEVELOPER_SKILL_SQL = """
             SELECT name
@@ -64,24 +63,25 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
 
 
     @Override
-    public Optional<DeveloperEntity> add(DeveloperEntity developerEntity) throws RepositoryException {
+    public Optional<DeveloperEntity> add(DeveloperEntity developer) throws RepositoryException {
         Optional<DeveloperEntity> maybeDeveloper = Optional.empty();
-        try (var prepStatement = ConnectionUtils.prepareStatementWithGeneratedKeys(ADD_DEVELOPER_SQL)) {
-            prepStatement.setString(1, developerEntity.getFirstName());
-            prepStatement.setString(2, developerEntity.getLastName());
-            prepStatement.setObject(3, developerEntity.getSpecialty().getName() == null ? null : developerEntity.getSpecialty().getId());
+        Long specialtyId = developer.getSpecialty().getName() == null ? null : developer.getSpecialty().getId();
+        try (var prepStatement = connection.prepareStatement(ADD_DEVELOPER_SQL, Statement.RETURN_GENERATED_KEYS)) {
+            prepStatement.setString(1, developer.getFirstName());
+            prepStatement.setString(2, developer.getLastName());
+            prepStatement.setObject(3, specialtyId);
             prepStatement.setString(4, Status.ACTIVE.name());
             prepStatement.setString(5, Status.ACTIVE.name());
             prepStatement.executeUpdate();
             try (var resultSet = prepStatement.getGeneratedKeys()) {
                 if (resultSet.next()) {
-                    developerEntity.setId(resultSet.getLong(1));
-                    developerEntity.setStatus(Status.ACTIVE);
-                    maybeDeveloper = Optional.of(developerEntity);
+                    developer.setId(resultSet.getLong(1));
+                    developer.setStatus(Status.ACTIVE);
+                    maybeDeveloper = Optional.of(developer);
                 }
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e);//TODO Add logger
+            throw new RepositoryException(e);//TODO Add logger
         }
         return maybeDeveloper;
     }
@@ -104,17 +104,19 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
     }
 
     @Override
-    public Optional<DeveloperEntity> update(DeveloperEntity developerEntity) throws RepositoryException {
+    public Optional<DeveloperEntity> update(DeveloperEntity developer) throws RepositoryException {
         Optional<DeveloperEntity> maybeDeveloper = Optional.empty();
+        Long specialtyId = developer.getSpecialty().getName() == null ? null : developer.getSpecialty().getId();
         try (var prepStatement = connection.prepareStatement(UPDATE_DEVELOPER_SQL)) {
-            prepStatement.setString(1, developerEntity.getFirstName());
-            prepStatement.setString(2, developerEntity.getLastName());
-            prepStatement.setLong(3, developerEntity.getId());
-            prepStatement.setString(4, Status.ACTIVE.name());
+            prepStatement.setString(1, developer.getFirstName());
+            prepStatement.setString(2, developer.getLastName());
+            prepStatement.setLong(3, specialtyId);
+            prepStatement.setLong(4, developer.getId());
+            prepStatement.setString(5, Status.ACTIVE.name());
             int affectedRows = prepStatement.executeUpdate();
             if (affectedRows == 1) {
-                developerEntity.setStatus(Status.ACTIVE);
-                maybeDeveloper = Optional.of(developerEntity);
+                developer.setStatus(Status.ACTIVE);
+                maybeDeveloper = Optional.of(developer);
             }
         } catch (
                 SQLException e) {
@@ -147,6 +149,7 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
                             .getInstance()
                             .map(resultSet)
                             .ifPresent(developerEntityList::add);
+
                 }
 
             }
@@ -160,18 +163,27 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
     public void deleteSpecialtyForDevelopers(Long id) throws RepositoryException {
         try (var prepStatement = connection.prepareStatement(SET_NULL_SPECIALTY_FOR_DEVELOPERS_SQL)) {
             prepStatement.setLong(1, id);
-            int affectedRow = prepStatement.executeUpdate();
+            prepStatement.executeUpdate();
         } catch (SQLException e) {
             throw new RepositoryException(e); // TODO Add logger
         }
     }
 
-        @Override
+    @Override
     public void addDeveloperSkill(Long developerId, Long skillId) throws RepositoryException {
         try (var prepStatement = connection.prepareStatement(ADD_DEVELOPER_SKILL_SQL)) {
             prepStatement.setLong(1, developerId);
             prepStatement.setLong(2, skillId);
-            int affectedRows = prepStatement.executeUpdate();
+            prepStatement.executeUpdate();
+        } catch (SQLException e) {
+            throw new RepositoryException(e);
+        }
+    }
+
+    public void deleteDeveloperSkills(Long developerId) throws RepositoryException {
+        try (var prepStatement = connection.prepareStatement(DELETE_DEVELOPER_SKILL_SQL)) {
+            prepStatement.setLong(1, developerId);
+            prepStatement.executeUpdate();
         } catch (SQLException e) {
             throw new RepositoryException(e);
         }

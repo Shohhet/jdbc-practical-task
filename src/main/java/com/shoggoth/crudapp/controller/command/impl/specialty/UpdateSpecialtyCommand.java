@@ -27,7 +27,7 @@ public class UpdateSpecialtyCommand implements Command {
                     () -> ui.writeToConsole(String.format(CommandUtils.SPECIALTY_DOES_NOT_EXIST_MSG, stringId))
             );
         } catch (ServiceException e) {
-            ui.writeToConsole(String.format(CommandUtils.ERROR_UPDATING_SPECIALTY, e.getMessage()));
+            ui.writeToConsole(String.format(CommandUtils.ERROR_UPDATING_SPECIALTY_MSG, e.getMessage()));
         }
     }
 }
