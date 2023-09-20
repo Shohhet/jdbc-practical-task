@@ -1,11 +1,14 @@
 package com.shoggoth.crudapp.model.service.impl;
 
+import com.shoggoth.crudapp.model.service.util.ServiceUtils;
 import com.shoggoth.crudapp.model.service.util.TransactionUtil;
 import com.shoggoth.crudapp.model.entity.SkillEntity;
 import com.shoggoth.crudapp.model.exceptions.RepositoryException;
 import com.shoggoth.crudapp.model.exceptions.ServiceException;
 import com.shoggoth.crudapp.model.repository.SkillRepository;
 import com.shoggoth.crudapp.model.service.SkillService;
+import com.shoggoth.crudapp.model.service.validator.IdValidator;
+import com.shoggoth.crudapp.model.service.validator.SkillNameValidator;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -24,7 +27,11 @@ public class SkillServiceImpl implements SkillService {
     @Override
     public Optional<SkillEntity> add(String name) throws ServiceException {
         SkillEntity skillEntity = new SkillEntity();
-        skillEntity.setName(name);
+        if (SkillNameValidator.getInstance().validate(name)) {
+            skillEntity.setName(name);
+        } else {
+            throw new ServiceException(ServiceUtils.WRONG_SKILL_NAME_MSG);
+        }
         Optional<SkillEntity> maybeSkill;
         try {
             transaction.begin(repository);
@@ -50,7 +57,12 @@ public class SkillServiceImpl implements SkillService {
     @Override
     public Optional<SkillEntity> get(String stringId) throws ServiceException {
         Optional<SkillEntity> maybeSkill;
-        Long id = Long.parseLong(stringId);
+        Long id;
+        if (IdValidator.getInstance().validate(stringId)) {
+            id = Long.parseLong(stringId);
+        } else {
+            throw new ServiceException(ServiceUtils.WRONG_ID_MSG);
+        }
         try {
             transaction.begin(repository);
             maybeSkill = repository.getById(id);
@@ -69,9 +81,18 @@ public class SkillServiceImpl implements SkillService {
     @Override
     public Optional<SkillEntity> update(String stringId, String name) throws ServiceException {
         SkillEntity skillEntity = new SkillEntity();
-        Long id = Long.parseLong(stringId);
+        Long id;
+        if (IdValidator.getInstance().validate(stringId)) {
+            id = Long.parseLong(stringId);
+        } else {
+            throw new ServiceException(ServiceUtils.WRONG_ID_MSG);
+        }
         skillEntity.setId(id);
-        skillEntity.setName(name);
+        if (SkillNameValidator.getInstance().validate(name)) {
+            skillEntity.setName(name);
+        } else {
+            throw new ServiceException(ServiceUtils.WRONG_SKILL_NAME_MSG);
+        }
         Optional<SkillEntity> maybeSkill;
         try {
             transaction.begin(repository);
@@ -97,7 +118,12 @@ public class SkillServiceImpl implements SkillService {
     @Override
     public boolean delete(String stringId) throws ServiceException {
         boolean result = false;
-        Long id = Long.parseLong(stringId);
+        Long id;
+        if (IdValidator.getInstance().validate(stringId)) {
+            id = Long.parseLong(stringId);
+        } else {
+            throw new ServiceException(ServiceUtils.WRONG_ID_MSG);
+        }
         try {
             transaction.begin(repository);
             if (repository.delete(id)) {

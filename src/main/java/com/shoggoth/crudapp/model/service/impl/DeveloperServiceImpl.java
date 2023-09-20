@@ -1,5 +1,6 @@
 package com.shoggoth.crudapp.model.service.impl;
 
+import com.shoggoth.crudapp.model.service.util.ServiceUtils;
 import com.shoggoth.crudapp.model.service.util.TransactionUtil;
 import com.shoggoth.crudapp.model.entity.DeveloperEntity;
 import com.shoggoth.crudapp.model.entity.SkillEntity;
@@ -10,12 +11,17 @@ import com.shoggoth.crudapp.model.repository.DeveloperRepository;
 import com.shoggoth.crudapp.model.repository.SkillRepository;
 import com.shoggoth.crudapp.model.repository.SpecialtyRepository;
 import com.shoggoth.crudapp.model.service.DeveloperService;
+import com.shoggoth.crudapp.model.service.validator.FirstLastNameValidator;
+import com.shoggoth.crudapp.model.service.validator.IdValidator;
+import com.shoggoth.crudapp.model.service.validator.SkillNameValidator;
+import com.shoggoth.crudapp.model.service.validator.SpecialtyNameValidator;
 
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
 public class DeveloperServiceImpl implements DeveloperService {
+
     private final SpecialtyRepository specialtyRepository;
     private final DeveloperRepository developerRepository;
     private final SkillRepository skillRepository;
@@ -36,15 +42,24 @@ public class DeveloperServiceImpl implements DeveloperService {
 
     @Override
     public Optional<DeveloperEntity> add(String firstName, String lastName, List<String> skillNames, String specialtyName) throws ServiceException {
-        Optional<DeveloperEntity> maybeDeveloper = Optional.empty();
+        Optional<DeveloperEntity> maybeDeveloper;
         DeveloperEntity developer = new DeveloperEntity();
         SpecialtyEntity specialty = new SpecialtyEntity();
         SkillEntity skill = new SkillEntity();
-        developer.setFirstName(firstName);
-        developer.setLastName(lastName);
+        if (FirstLastNameValidator.getInstance().validate(firstName)) {
+            developer.setFirstName(firstName);
+        } else {
+            throw new ServiceException(ServiceUtils.WRONG_FIRST_NAME_MSG);
+        }
+        if (FirstLastNameValidator.getInstance().validate(lastName)) {
+            developer.setLastName(lastName);
+        } else {
+            throw new ServiceException(ServiceUtils.WRONG_LAST_NAME_MSG);
+        }
+
         try {
             transaction.begin(developerRepository, specialtyRepository, skillRepository);
-            if (specialtyName != null && !specialtyName.isEmpty()) {
+            if (SpecialtyNameValidator.getInstance().validate(specialtyName)) {
                 specialty.setName(specialtyName);
                 var maybeSpecialty = specialtyRepository.getByName(specialty.getName());
                 if (maybeSpecialty.isPresent()) {
@@ -55,27 +70,38 @@ public class DeveloperServiceImpl implements DeveloperService {
                         specialty = maybeSpecialty.get();
                     }
                 }
+            } else {
+                throw new ServiceException(ServiceUtils.WRONG_SPECIALTY_NAME_MSG);
             }
             developer.setSpecialty(specialty);
-            developer = developerRepository.add(developer).orElseThrow(() -> new ServiceException("Can't add developer.")); //TODO remove exception?
 
-            if (skillNames != null) {
-                for (String name : skillNames) {
-                    var maybeSkill = skillRepository.getByName(name);
-                    if (maybeSkill.isPresent()) {
-                        skill = maybeSkill.get();
-                        developerRepository.addDeveloperSkill(developer.getId(), skill.getId());
-                    } else {
-                        skill.setName(name);
-                        maybeSkill = skillRepository.add(skill);
-                        if (maybeSkill.isPresent()) {
-                            skill = maybeSkill.get();
-                            developerRepository.addDeveloperSkill(developer.getId(), skill.getId());
+            maybeDeveloper = developerRepository.add(developer);
+            if (maybeDeveloper.isPresent()) {
+                developer = maybeDeveloper.get();
+                developerRepository.deleteDeveloperSkills(developer.getId());
+
+                if (skillNames != null) {
+                    for (String name : skillNames) {
+                        if (SkillNameValidator.getInstance().validate(name)) {
+                            var maybeSkill = skillRepository.getByName(name);
+                            if (maybeSkill.isPresent()) {
+                                skill = maybeSkill.get();
+                                developerRepository.addDeveloperSkill(developer.getId(), skill.getId());
+                            } else {
+                                skill.setName(name);
+                                maybeSkill = skillRepository.add(skill);
+                                if (maybeSkill.isPresent()) {
+                                    skill = maybeSkill.get();
+                                    developerRepository.addDeveloperSkill(developer.getId(), skill.getId());
+                                }
+                            }
+                        } else {
+                            throw new ServiceException(ServiceUtils.WRONG_SKILL_NAME_MSG);
                         }
                     }
+                    developer.setSkills(skillRepository.getDeveloperSkills(developer.getId()));
+                    maybeDeveloper = Optional.of(developer);
                 }
-                developer.setSkills(skillRepository.getDeveloperSkills(developer.getId()));
-                maybeDeveloper = Optional.of(developer);
             }
             transaction.commit();
 
@@ -100,7 +126,12 @@ public class DeveloperServiceImpl implements DeveloperService {
     public Optional<DeveloperEntity> get(String stringId) throws ServiceException {
         Optional<DeveloperEntity> maybeDeveloper;
         DeveloperEntity developer;
-        Long id = Long.parseLong(stringId);
+        Long id;
+        if (IdValidator.getInstance().validate(stringId)) {
+            id = Long.parseLong(stringId);
+        } else {
+            throw new ServiceException(ServiceUtils.WRONG_ID_MSG);
+        }
         try {
             transaction.begin(developerRepository, specialtyRepository, skillRepository);
             maybeDeveloper = developerRepository.getById(id);
@@ -124,17 +155,34 @@ public class DeveloperServiceImpl implements DeveloperService {
 
     @Override
     public Optional<DeveloperEntity> update(String stringId, String firstName, String lastName, List<String> skillNames, String specialtyName) throws ServiceException {
-        Long developerId = Long.parseLong(stringId);
-        Optional<DeveloperEntity> maybeDeveloper = Optional.empty();
+        Long developerId;
+        if (IdValidator.getInstance().validate(stringId)) {
+            developerId = Long.parseLong(stringId);
+        } else {
+            throw new ServiceException(ServiceUtils.WRONG_ID_MSG);
+        }
+        Optional<DeveloperEntity> maybeDeveloper;
         try {
             transaction.begin(developerRepository, specialtyRepository, skillRepository);
             maybeDeveloper = developerRepository.getById(developerId);
             if (maybeDeveloper.isPresent()) {
                 DeveloperEntity developer = maybeDeveloper.get();
-                developer.setFirstName(firstName);
-                developer.setLastName(lastName);
+                if (FirstLastNameValidator.getInstance().validate(firstName)) {
+                    developer.setFirstName(firstName);
+                } else {
+                    throw new ServiceException(ServiceUtils.WRONG_FIRST_NAME_MSG);
+                }
+                if (FirstLastNameValidator.getInstance().validate(lastName)) {
+                    developer.setLastName(lastName);
+                } else {
+                    throw new ServiceException(ServiceUtils.WRONG_LAST_NAME_MSG);
+                }
                 Optional<SpecialtyEntity> maybeSpecialty;
-                maybeSpecialty = specialtyRepository.getByName(specialtyName);
+                if (SpecialtyNameValidator.getInstance().validate(specialtyName)) {
+                    maybeSpecialty = specialtyRepository.getByName(specialtyName);
+                } else {
+                    throw new ServiceException(ServiceUtils.WRONG_SPECIALTY_NAME_MSG);
+                }
                 if (maybeSpecialty.isPresent()) {
                     developer.setSpecialty(maybeSpecialty.get());
                 } else {
@@ -144,15 +192,20 @@ public class DeveloperServiceImpl implements DeveloperService {
                     maybeSpecialty.ifPresent(developer::setSpecialty);
                 }
                 developerRepository.deleteDeveloperSkills(developerId);
-                for(String skillName : skillNames) {
-                    Optional<SkillEntity> maybeSkill = skillRepository.getByName(skillName);
+                Optional<SkillEntity> maybeSkill;
+                for (String skillName : skillNames) {
+                    if (SkillNameValidator.getInstance().validate(skillName)) {
+                        maybeSkill = skillRepository.getByName(skillName);
+                    } else {
+                        throw new ServiceException(ServiceUtils.WRONG_SKILL_NAME_MSG);
+                    }
                     if (maybeSkill.isPresent()) {
                         developerRepository.addDeveloperSkill(developerId, maybeSkill.get().getId());
                     } else {
                         SkillEntity skill = new SkillEntity();
                         skill.setName(skillName);
                         maybeSkill = skillRepository.add(skill);
-                        if(maybeSkill.isPresent()) {
+                        if (maybeSkill.isPresent()) {
                             developerRepository.addDeveloperSkill(developerId, maybeSkill.get().getId());
                         }
                     }
@@ -180,7 +233,12 @@ public class DeveloperServiceImpl implements DeveloperService {
     @Override
     public boolean delete(String stringId) throws ServiceException {
         boolean result;
-        Long id = Long.parseLong(stringId);
+        Long id;
+        if (IdValidator.getInstance().validate(stringId)) {
+            id = Long.parseLong(stringId);
+        } else {
+            throw new ServiceException(ServiceUtils.WRONG_ID_MSG);
+        }
         try {
             transaction.begin(developerRepository);
             result = developerRepository.delete(id);

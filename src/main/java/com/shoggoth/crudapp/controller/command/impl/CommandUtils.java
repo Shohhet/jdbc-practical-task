@@ -1,7 +1,5 @@
 package com.shoggoth.crudapp.controller.command.impl;
 
-import java.util.Locale;
-
 public class CommandUtils {
     public static final String EXIT_MSG = "See u later.";
     public static final String ENTER_SPECIALTY_NAME_MSG = "Enter specialty name:";

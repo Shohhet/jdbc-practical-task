@@ -1,5 +1,6 @@
 package com.shoggoth.crudapp.model.service.impl;
 
+import com.shoggoth.crudapp.model.service.util.ServiceUtils;
 import com.shoggoth.crudapp.model.service.util.TransactionUtil;
 import com.shoggoth.crudapp.model.entity.SpecialtyEntity;
 import com.shoggoth.crudapp.model.exceptions.RepositoryException;
@@ -7,6 +8,8 @@ import com.shoggoth.crudapp.model.exceptions.ServiceException;
 import com.shoggoth.crudapp.model.repository.DeveloperRepository;
 import com.shoggoth.crudapp.model.repository.SpecialtyRepository;
 import com.shoggoth.crudapp.model.service.SpecialtyService;
+import com.shoggoth.crudapp.model.service.validator.IdValidator;
+import com.shoggoth.crudapp.model.service.validator.SpecialtyNameValidator;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -26,7 +29,11 @@ public class SpecialtyServiceImpl implements SpecialtyService {
     @Override
     public Optional<SpecialtyEntity> add(String name) throws ServiceException {
         SpecialtyEntity specialty = new SpecialtyEntity();
-        specialty.setName(name);
+        if (SpecialtyNameValidator.getInstance().validate(name)) {
+            specialty.setName(name);
+        } else {
+            throw new ServiceException(ServiceUtils.WRONG_SPECIALTY_NAME_MSG);
+        }
         Optional<SpecialtyEntity> maybeSpecialty;
         try {
             transaction.begin(specialtyRepository);
@@ -52,7 +59,12 @@ public class SpecialtyServiceImpl implements SpecialtyService {
     @Override
     public Optional<SpecialtyEntity> get(String stringId) throws ServiceException {
         Optional<SpecialtyEntity> maybeSpecialty;
-        Long id = Long.parseLong(stringId);
+        Long id;
+        if (IdValidator.getInstance().validate(stringId)) {
+            id = Long.parseLong(stringId);
+        } else {
+            throw new ServiceException(ServiceUtils.WRONG_ID_MSG);
+        }
         try {
             transaction.begin(specialtyRepository);
             maybeSpecialty = specialtyRepository.getById(id);
@@ -71,9 +83,18 @@ public class SpecialtyServiceImpl implements SpecialtyService {
     @Override
     public Optional<SpecialtyEntity> update(String stringId, String name) throws ServiceException {
         SpecialtyEntity specialty = new SpecialtyEntity();
-        Long id = Long.parseLong(stringId);
-        specialty.setId(id);
-        specialty.setName(name);
+        Long id;
+        if (IdValidator.getInstance().validate(stringId)) {
+            id = Long.parseLong(stringId);
+            specialty.setId(id);
+        } else {
+            throw new ServiceException(ServiceUtils.WRONG_ID_MSG);
+        }
+        if (SpecialtyNameValidator.getInstance().validate(name)) {
+            specialty.setName(name);
+        } else {
+            throw new ServiceException(ServiceUtils.WRONG_SPECIALTY_NAME_MSG);
+        }
         Optional<SpecialtyEntity> maybeSpecialty;
 
         try {
@@ -100,7 +121,12 @@ public class SpecialtyServiceImpl implements SpecialtyService {
     @Override
     public boolean delete(String stringId) throws ServiceException {
         boolean result = false;
-        Long id = Long.parseLong(stringId);
+        Long id;
+        if (IdValidator.getInstance().validate(stringId)) {
+            id = Long.parseLong(stringId);
+        } else {
+            throw new ServiceException(ServiceUtils.WRONG_ID_MSG);
+        }
         try {
             transaction.begin(specialtyRepository,developerRepository);
             if (specialtyRepository.delete(id)) {

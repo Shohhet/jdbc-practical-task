@@ -17,7 +17,7 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
     private static final String ADD_DEVELOPER_SQL = """
             INSERT INTO developer (first_name, last_name, specialty_id, status)
             VALUES (?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE status = ?;
+            ON DUPLICATE KEY UPDATE status = ?, specialty_id = ?;
             """;
     private static final String UPDATE_DEVELOPER_SQL = """
             UPDATE developer
@@ -49,11 +49,6 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
             FROM developer LEFT JOIN specialty ON developer.specialty_id = specialty.id
             WHERE developer.status = ?;
             """;
-    private static final String GET_DEVELOPER_SKILL_SQL = """
-            SELECT name
-            FROM developer_skill JOIN skillEntity ON developer_skill.skill_id = skillEntity.id
-            WHERE developer_skill.developer_id = ?;
-            """;
 
     private static final String SET_NULL_SPECIALTY_FOR_DEVELOPERS_SQL = """
             UPDATE developer
@@ -72,6 +67,7 @@ public class JdbcDeveloperRepositoryImpl implements DeveloperRepository {
             prepStatement.setObject(3, specialtyId);
             prepStatement.setString(4, Status.ACTIVE.name());
             prepStatement.setString(5, Status.ACTIVE.name());
+            prepStatement.setObject(6, specialtyId);
             prepStatement.executeUpdate();
             try (var resultSet = prepStatement.getGeneratedKeys()) {
                 if (resultSet.next()) {

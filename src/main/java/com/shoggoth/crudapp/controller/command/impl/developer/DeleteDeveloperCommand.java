@@ -4,7 +4,6 @@ import com.shoggoth.crudapp.controller.command.Command;
 import com.shoggoth.crudapp.controller.command.impl.CommandUtils;
 import com.shoggoth.crudapp.model.exceptions.ServiceException;
 import com.shoggoth.crudapp.model.service.DeveloperService;
-import com.shoggoth.crudapp.model.service.SkillService;
 import com.shoggoth.crudapp.view.UserInterface;
 
 public class DeleteDeveloperCommand implements Command {

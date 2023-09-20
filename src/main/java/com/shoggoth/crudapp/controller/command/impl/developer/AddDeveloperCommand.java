@@ -6,7 +6,6 @@ import com.shoggoth.crudapp.model.exceptions.ServiceException;
 import com.shoggoth.crudapp.model.service.DeveloperService;
 import com.shoggoth.crudapp.view.UserInterface;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
